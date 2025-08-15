@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-800 text-white;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-crypto-primary to-crypto-accent bg-clip-text text-transparent;
+  }
+  
+  .hover-lift {
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-crypto-dark;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-crypto-primary rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-crypto-secondary;
+}

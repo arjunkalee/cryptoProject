@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react'
 import Header from './components/Header'
 import CryptoGrid from './components/CryptoGrid'
 import CryptoStats from './components/CryptoStats'
+import CryptoRecommendations from './components/CryptoRecommendations'
 import LoadingSpinner from './components/LoadingSpinner'
-import { CryptoData } from './types/crypto'
+import { CryptoData, CryptoRecommendation } from './types/crypto'
 import { fetchCryptoData } from './services/cryptoApi'
+import { getTopCryptoRecommendations } from './services/cryptoRecommendations'
 
 function App() {
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([])
+  const [cryptoRecommendations, setCryptoRecommendations] = useState<CryptoRecommendation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -28,6 +31,10 @@ function App() {
       setError(null)
       const data = await fetchCryptoData()
       setCryptoData(data)
+      
+      // Generate recommendations from the crypto data
+      const recommendations = getTopCryptoRecommendations(data)
+      setCryptoRecommendations(recommendations)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch crypto data')
     } finally {
@@ -80,6 +87,11 @@ function App() {
             </button>
           </div>
         )}
+        
+        {/* Top 5 Crypto Recommendations - Now at the top */}
+        <div className="mb-8">
+          <CryptoRecommendations recommendations={cryptoRecommendations} />
+        </div>
         
         <CryptoStats cryptoData={cryptoData} />
         

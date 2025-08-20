@@ -45,3 +45,47 @@ export interface CryptoStats {
   topGainers: CryptoData[]
   topLosers: CryptoData[]
 }
+
+export interface CryptoRecommendation {
+  crypto: CryptoData
+  recommendation_score: number
+  trend_score: number
+  momentum_score: number
+  risk_score: number
+  recommendation: 'Strong Buy' | 'Buy' | 'Hold' | 'Sell' | 'Strong Sell'
+  reasoning: string[]
+  risk_factors: string[]
+  technical_analysis: {
+    rsi: number
+    trend: 'Bullish' | 'Bearish' | 'Neutral'
+    support_level: number
+    resistance_level: number
+    volatility: number
+  }
+  forecast: {
+    short_term: number // 1 week
+    medium_term: number // 1 month
+    long_term: number // 3 months
+    confidence: number
+    ml_prediction?: {
+      model_scores: {
+        lstm: number
+        arima: number
+        linear_regression: number
+        random_forest: number
+        sentiment: number
+      }
+      trend_strength: number
+      volatility_forecast: number
+      technical_indicators: {
+        rsi: number
+        macd: number
+        macd_signal: number
+        bb_upper: number
+        bb_lower: number
+        stochastic_k: number
+        williams_r: number
+      }
+    }
+  }
+}

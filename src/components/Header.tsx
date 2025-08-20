@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Search, RefreshCw, TrendingUp, DollarSign, BarChart3 } from 'lucide-react'
 
 interface HeaderProps {
@@ -8,6 +8,9 @@ interface HeaderProps {
   onSortChange: (sort: 'market_cap' | 'price' | 'change_24h') => void
   onRefresh: () => void
   loading: boolean
+  searchResultsCount?: number
+  totalResultsCount?: number
+  allCryptoData?: Array<{ name: string; symbol: string; cmc_rank: number }>
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -16,7 +19,9 @@ const Header: React.FC<HeaderProps> = ({
   sortBy,
   onSortChange,
   onRefresh,
-  loading
+  loading,
+  searchResultsCount,
+  totalResultsCount
 }) => {
   return (
     <header className="glass-card sticky top-0 z-50 backdrop-blur-xl">
@@ -43,6 +48,26 @@ const Header: React.FC<HeaderProps> = ({
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-crypto-primary focus:border-transparent transition-all"
             />
+            {searchTerm && (
+              <>
+                <button
+                  onClick={() => onSearchChange('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-white transition-colors"
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+                <div className="absolute -bottom-8 left-0 text-sm text-gray-400">
+                  {searchResultsCount !== undefined && totalResultsCount !== undefined ? (
+                    <span>
+                      {searchResultsCount} of {totalResultsCount} results
+                    </span>
+                  ) : (
+                    <span>Searching...</span>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Sort and Refresh Controls */}

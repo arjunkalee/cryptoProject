@@ -1,12 +1,17 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { TrendingUp, TrendingDown, BarChart3, Coins, Globe } from 'lucide-react'
 import { CryptoData } from '../types/crypto'
+import ExpandedAssetView from './ExpandedAssetView'
+import CryptoChart from './CryptoChart'
 
 interface CryptoCardProps {
   crypto: CryptoData
 }
 
 const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
+  const [showExpanded, setShowExpanded] = useState(false)
+  const [showChart, setShowChart] = useState(false)
+  
   const formatCurrency = (value: number) => {
     if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`
     if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`
@@ -39,9 +44,13 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
   }
 
   return (
-    <div className="glass-card p-6 hover-lift group cursor-pointer">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+    <>
+      <div 
+        className="glass-card p-6 hover-lift group cursor-pointer"
+        onClick={() => setShowExpanded(true)}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-gradient-to-br from-crypto-primary to-crypto-secondary rounded-lg flex items-center justify-center text-white font-bold text-lg">
             {crypto.symbol.charAt(0)}
@@ -59,10 +68,10 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
             <BarChart3 className="w-3 h-3 text-crypto-accent" />
           </div>
         </div>
-      </div>
+        </div>
 
-      {/* Price and Change */}
-      <div className="mb-4">
+        {/* Price and Change */}
+        <div className="mb-4">
         <div className="text-2xl font-bold text-white mb-2">
           {formatPrice(crypto.quote.USD.price)}
         </div>
@@ -70,10 +79,10 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
           <span className="text-gray-400 text-sm">24h Change</span>
           {formatPercentage(crypto.quote.USD.percent_change_24h)}
         </div>
-      </div>
+        </div>
 
-      {/* Market Stats */}
-      <div className="space-y-3 mb-4">
+        {/* Market Stats */}
+        <div className="space-y-3 mb-4">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-400 flex items-center gap-2">
             <Coins className="w-4 h-4" />
@@ -93,44 +102,188 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
             {formatCurrency(crypto.quote.USD.volume_24h)}
           </span>
         </div>
-      </div>
-
-      {/* Supply Info */}
-      <div className="pt-4 border-t border-white/10">
-        <div className="grid grid-cols-2 gap-4 text-xs">
-          <div>
-            <p className="text-gray-400 mb-1">Circulating</p>
-            <p className="text-white font-medium">
-              {formatSupply(crypto.circulating_supply)}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-400 mb-1">Total Supply</p>
-            <p className="text-white font-medium">
-              {crypto.total_supply ? formatSupply(crypto.total_supply) : '∞'}
-            </p>
-          </div>
+        
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-400 flex items-center gap-2">
+            <Coins className="w-4 h-4" />
+            Supply
+          </span>
+          <span className="text-white font-medium">
+            {formatSupply(crypto.circulating_supply)}
+          </span>
         </div>
-      </div>
+        </div>
 
-      {/* Additional Performance Metrics */}
-      <div className="mt-4 pt-4 border-t border-white/10">
-        <div className="grid grid-cols-2 gap-4 text-xs">
-          <div>
-            <p className="text-gray-400 mb-1">1h Change</p>
-            <div className="text-xs">
-              {formatPercentage(crypto.quote.USD.percent_change_1h)}
+        {/* Additional Performance Metrics */}
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="text-center p-2 bg-crypto-darker/30 rounded-lg">
+            <div className="text-gray-400 mb-1">1h</div>
+            <div className={`font-medium ${crypto.quote.USD.percent_change_1h >= 0 ? 'text-crypto-success' : 'text-crypto-danger'}`}>
+              {crypto.quote.USD.percent_change_1h >= 0 ? '+' : ''}{crypto.quote.USD.percent_change_1h.toFixed(2)}%
             </div>
           </div>
-          <div>
-            <p className="text-gray-400 mb-1">7d Change</p>
-            <div className="text-xs">
-              {formatPercentage(crypto.quote.USD.percent_change_7d)}
+          <div className="text-center p-2 bg-crypto-darker/30 rounded-lg">
+            <div className="text-gray-400 mb-1">7d</div>
+            <div className={`font-medium ${crypto.quote.USD.percent_change_7d >= 0 ? 'text-crypto-success' : 'text-crypto-danger'}`}>
+              {crypto.quote.USD.percent_change_7d >= 0 ? '+' : ''}{crypto.quote.USD.percent_change_7d.toFixed(2)}%
             </div>
           </div>
         </div>
+
+        {/* Hover Effect Indicator */}
+        <div className="mt-4 pt-3 border-t border-crypto-accent/20 text-center">
+          <span className="text-xs text-crypto-accent group-hover:text-crypto-primary transition-colors">
+            Click to view details
+          </span>
+        </div>
       </div>
-    </div>
+
+      {showExpanded && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-crypto-dark border border-crypto-accent/30 rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-crypto-dark/95 backdrop-blur-sm border-b border-crypto-accent/30 p-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-crypto-primary to-crypto-secondary rounded-xl flex items-center justify-center text-white font-bold text-2xl">
+                    {crypto.symbol.charAt(0)}
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold text-white">{crypto.name}</h1>
+                    <p className="text-xl text-gray-400">{crypto.symbol}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <span className="text-sm text-gray-400">Rank #{crypto.cmc_rank}</span>
+                      <span className="text-sm text-crypto-accent">Current Price: {formatPrice(crypto.quote.USD.price)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowChart(!showChart)
+                    }}
+                    className="px-4 py-2 bg-crypto-accent/20 hover:bg-crypto-accent/30 text-crypto-accent rounded-lg transition-colors text-sm font-medium"
+                  >
+                    {showChart ? 'Hide Chart' : 'Show Chart'}
+                  </button>
+                  <button
+                    onClick={() => setShowExpanded(false)}
+                    className="w-10 h-10 bg-crypto-accent/20 hover:bg-crypto-accent/30 rounded-lg flex items-center justify-center transition-colors"
+                  >
+                    <span className="text-crypto-accent text-xl">×</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Chart Section */}
+              {showChart && (
+                <div className="bg-crypto-darker/50 rounded-xl p-6 border border-crypto-accent/20">
+                  <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                    <BarChart3 className="w-6 h-6 text-crypto-primary" />
+                    Price Chart & Forecast
+                  </h3>
+                  <CryptoChart crypto={crypto} />
+                </div>
+              )}
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-crypto-darker/50 rounded-xl p-6 border border-crypto-accent/20">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Coins className="w-5 h-5 text-crypto-primary" />
+                    Market Data
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Market Cap</span>
+                      <span className="text-white font-semibold">{formatCurrency(crypto.quote.USD.market_cap)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Volume (24h)</span>
+                      <span className="text-white font-semibold">{formatCurrency(crypto.quote.USD.volume_24h)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Circulating Supply</span>
+                      <span className="text-white font-semibold">{formatSupply(crypto.circulating_supply)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-crypto-darker/50 rounded-xl p-6 border border-crypto-accent/20">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-crypto-primary" />
+                    Performance
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">1h Change</span>
+                      <span className={`font-semibold ${crypto.quote.USD.percent_change_1h >= 0 ? 'text-crypto-success' : 'text-crypto-danger'}`}>
+                        {crypto.quote.USD.percent_change_1h >= 0 ? '+' : ''}{crypto.quote.USD.percent_change_1h.toFixed(2)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">24h Change</span>
+                      <span className={`font-semibold ${crypto.quote.USD.percent_change_24h >= 0 ? 'text-crypto-success' : 'text-crypto-danger'}`}>
+                        {crypto.quote.USD.percent_change_24h >= 0 ? '+' : ''}{crypto.quote.USD.percent_change_24h.toFixed(2)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">7d Change</span>
+                      <span className={`font-semibold ${crypto.quote.USD.percent_change_7d >= 0 ? 'text-crypto-success' : 'text-crypto-danger'}`}>
+                        {crypto.quote.USD.percent_change_7d >= 0 ? '+' : ''}{crypto.quote.USD.percent_change_7d.toFixed(2)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-crypto-darker/50 rounded-xl p-6 border border-crypto-accent/20">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-crypto-primary" />
+                    Supply Info
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Total Supply</span>
+                      <span className="text-white font-semibold">{formatSupply(crypto.total_supply)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Max Supply</span>
+                      <span className="text-white font-semibold">
+                        {crypto.max_supply ? formatSupply(crypto.max_supply) : '∞'}
+                      </span>
+                    </div>
+                    {crypto.max_supply && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Circulation %</span>
+                        <span className="text-white font-semibold">
+                          {((crypto.circulating_supply / crypto.max_supply) * 100).toFixed(2)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* View Full Details Button */}
+              <div className="text-center">
+                <button
+                  onClick={() => {
+                    setShowExpanded(false)
+                    // You can add navigation to full details page here if needed
+                  }}
+                  className="px-6 py-3 bg-crypto-primary hover:bg-crypto-secondary text-white rounded-lg transition-colors font-medium"
+                >
+                  View Full Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

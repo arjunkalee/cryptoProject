@@ -11,12 +11,13 @@
     "lint:fix": "eslint . --ext js,jsx,ts,tsx --fix"
   },
   "dependencies": {
+    "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.6.0",
+    "clsx": "^2.0.0",
+    "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "axios": "^1.6.0",
-    "lucide-react": "^0.294.0",
     "recharts": "^2.8.0",
-    "clsx": "^2.0.0",
     "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
@@ -33,7 +34,13 @@
     "typescript": "^5.2.2",
     "vite": "^4.5.0"
   },
-  "keywords": ["crypto", "cryptocurrency", "tracker", "react", "api"],
+  "keywords": [
+    "crypto",
+    "cryptocurrency",
+    "tracker",
+    "react",
+    "api"
+  ],
   "author": "Your Name",
   "license": "MIT"
 }

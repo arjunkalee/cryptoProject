@@ -54,12 +54,16 @@ const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommend
   return (
     <div className={`bg-crypto-dark rounded-lg p-6 ${className}`}>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold gradient-text mb-2">
-          Top 5 Crypto Asset Recommendations
-        </h2>
-        <p className="text-gray-400 text-sm">
-          Based on performance analysis, technical indicators, and market trends
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold gradient-text mb-2">
+              Top 5 Crypto Asset Recommendations
+            </h2>
+            <p className="text-gray-400 text-sm">
+              Based on performance analysis, technical indicators, and market trends
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -86,249 +90,189 @@ const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommend
               </div>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="text-center">
-                <p className="text-gray-400 text-xs">Market Cap</p>
-                <p className="text-white font-semibold">{formatCurrency(rec.crypto.quote.USD.market_cap)}</p>
+            {/* Recommendation Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="text-center p-3 bg-crypto-dark/50 rounded-lg">
+                <div className={`text-2xl font-bold ${getRecommendationColor(rec.recommendation)}`}>
+                  {rec.recommendation}
+                </div>
+                <div className="text-xs text-gray-400">Recommendation</div>
               </div>
-              <div className="text-center">
-                <p className="text-gray-400 text-xs">24h Volume</p>
-                <p className="text-white font-semibold">{formatCurrency(rec.crypto.quote.USD.volume_24h)}</p>
+              
+              <div className="text-center p-3 bg-crypto-dark/50 rounded-lg">
+                <div className={`text-2xl font-bold ${getScoreColor(rec.recommendation_score)}`}>
+                  {rec.recommendation_score}
+                </div>
+                <div className="text-xs text-gray-400">Score</div>
               </div>
-              <div className="text-center">
-                <p className="text-gray-400 text-xs">7d Change</p>
-                <p className={`text-sm font-semibold ${rec.crypto.quote.USD.percent_change_7d >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatPercentage(rec.crypto.quote.USD.percent_change_7d)}
-                </p>
+              
+              <div className="text-center p-3 bg-crypto-dark/50 rounded-lg">
+                <div className={`text-2xl font-bold ${getTrendColor(rec.technical_analysis.trend)}`}>
+                  {rec.technical_analysis.trend}
+                </div>
+                <div className="text-xs text-gray-400">Trend</div>
               </div>
-              <div className="text-center">
-                <p className="text-gray-400 text-xs">Score</p>
-                <p className={`text-sm font-semibold ${getScoreColor(rec.recommendation_score)}`}>
-                  {rec.recommendation_score}/100
-                </p>
+              
+              <div className="text-center p-3 bg-crypto-dark/50 rounded-lg">
+                <div className="text-2xl font-bold text-crypto-primary">
+                  {rec.forecast.confidence}%
+                </div>
+                <div className="text-xs text-gray-400">Confidence</div>
               </div>
             </div>
 
-            {/* Recommendation and Trend */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getRecommendationColor(rec.recommendation)} bg-gray-800`}>
-                  {rec.recommendation}
-                </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getTrendColor(rec.technical_analysis.trend)} bg-gray-800`}>
-                  {rec.technical_analysis.trend} Trend
-                </span>
-              </div>
+            {/* Chart Toggle and Show More */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setShowChart(showChart === rec.crypto.symbol ? null : rec.crypto.symbol)}
+                className="px-4 py-2 bg-crypto-accent/20 hover:bg-crypto-accent/30 text-crypto-accent rounded-lg transition-colors text-sm font-medium"
+              >
+                {showChart === rec.crypto.symbol ? 'Hide Chart' : 'Show Chart'}
+              </button>
               
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setShowChart(showChart === rec.crypto.symbol ? null : rec.crypto.symbol)}
-                  className="text-green-400 hover:text-green-300 text-sm transition-colors px-3 py-1 border border-green-400 rounded-lg hover:bg-green-400/10"
-                >
-                  {showChart === rec.crypto.symbol ? 'Hide Chart' : 'Show Chart'}
-                </button>
-                <button
-                  onClick={() => setExpandedCrypto(expandedCrypto === rec.crypto.symbol ? null : rec.crypto.symbol)}
-                  className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
-                >
-                  {expandedCrypto === rec.crypto.symbol ? 'Show Less' : 'Show More'}
-                </button>
-              </div>
+              <button
+                onClick={() => setExpandedCrypto(expandedCrypto === rec.crypto.symbol ? null : rec.crypto.symbol)}
+                className="px-4 py-2 bg-crypto-primary hover:bg-crypto-secondary text-white rounded-lg transition-colors text-sm font-medium"
+              >
+                {expandedCrypto === rec.crypto.symbol ? 'Show Less' : 'Show More'}
+              </button>
             </div>
+
+            {/* Chart */}
+            {showChart === rec.crypto.symbol && (
+              <div className="mt-4">
+                <CryptoChart crypto={rec.crypto} />
+              </div>
+            )}
 
             {/* Expanded Details */}
             {expandedCrypto === rec.crypto.symbol && (
-              <div className="border-t border-gray-700 pt-4 space-y-4">
-                {/* Scores Breakdown */}
-                <div>
-                  <h4 className="text-lg font-semibold text-white mb-3">Analysis Scores</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center bg-gray-800 rounded-lg p-3">
-                      <p className="text-gray-400 text-xs">Recommendation</p>
-                      <p className={`text-white font-semibold ${getScoreColor(rec.recommendation_score)}`}>
-                        {rec.recommendation_score}/100
-                      </p>
-                    </div>
-                    <div className="text-center bg-gray-800 rounded-lg p-3">
-                      <p className="text-gray-400 text-xs">Trend</p>
-                      <p className={`text-white font-semibold ${getScoreColor(rec.trend_score)}`}>
-                        {rec.trend_score}/100
-                      </p>
-                    </div>
-                    <div className="text-center bg-gray-800 rounded-lg p-3">
-                      <p className="text-gray-400 text-xs">Momentum</p>
-                      <p className={`text-white font-semibold ${getScoreColor(rec.momentum_score)}`}>
-                        {rec.momentum_score}/100
-                      </p>
-                    </div>
-                    <div className="text-center bg-gray-800 rounded-lg p-3">
-                      <p className="text-gray-400 text-xs">Risk</p>
-                      <p className={`text-white font-semibold ${getScoreColor(100 - rec.risk_score)}`}>
-                        {(100 - rec.risk_score).toFixed(0)}/100
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Technical Analysis */}
-                <div>
-                  <h4 className="text-lg font-semibold text-white mb-3">Technical Analysis</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="text-center">
-                      <p className="text-gray-400 text-xs">RSI</p>
-                      <p className={`text-sm font-semibold ${
-                        rec.technical_analysis.rsi > 70 ? 'text-red-400' : 
-                        rec.technical_analysis.rsi < 30 ? 'text-green-400' : 'text-white'
-                      }`}>
-                        {rec.technical_analysis.rsi.toFixed(1)}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-gray-400 text-xs">Support</p>
-                      <p className="text-white font-semibold text-sm">
-                        {formatCurrency(rec.technical_analysis.support_level)}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-gray-400 text-xs">Resistance</p>
-                      <p className="text-white font-semibold text-sm">
-                        {formatCurrency(rec.technical_analysis.resistance_level)}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-gray-400 text-xs">Volatility</p>
-                      <p className="text-white font-semibold text-sm">
-                        {rec.technical_analysis.volatility.toFixed(1)}%
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-gray-400 text-xs">Trend</p>
-                      <p className={`text-sm font-semibold ${getTrendColor(rec.technical_analysis.trend)}`}>
-                        {rec.technical_analysis.trend}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Interactive Chart */}
-                <div className="mb-6">
-                  <CryptoChart recommendation={rec} />
-                </div>
-
-                {/* ML-Powered Price Forecast */}
-                <div>
-                  <h4 className="text-lg font-semibold text-white mb-3">
-                    🤖 AI-Powered Price Forecast
-                    {rec.forecast.ml_prediction && (
-                      <span className="ml-2 px-2 py-1 bg-blue-600 text-xs rounded-full">ML Enhanced</span>
-                    )}
-                  </h4>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div className="text-center bg-gray-800 rounded-lg p-3">
-                      <p className="text-gray-400 text-xs">1 Week</p>
-                      <p className="text-white font-semibold">{formatCurrency(rec.forecast.short_term)}</p>
-                      <p className={`text-xs ${rec.forecast.short_term > rec.crypto.quote.USD.price ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatPercentage(((rec.forecast.short_term - rec.crypto.quote.USD.price) / rec.crypto.quote.USD.price) * 100)}
-                      </p>
-                    </div>
-                    <div className="text-center bg-gray-800 rounded-lg p-3">
-                      <p className="text-gray-400 text-xs">1 Month</p>
-                      <p className="text-white font-semibold">{formatCurrency(rec.forecast.medium_term)}</p>
-                      <p className={`text-xs ${rec.forecast.medium_term > rec.crypto.quote.USD.price ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatPercentage(((rec.forecast.medium_term - rec.crypto.quote.USD.price) / rec.crypto.quote.USD.price) * 100)}
-                      </p>
-                    </div>
-                    <div className="text-center bg-gray-800 rounded-lg p-3">
-                      <p className="text-gray-400 text-xs">3 Months</p>
-                      <p className="text-white font-semibold">{formatCurrency(rec.forecast.long_term || rec.forecast.medium_term * 1.2)}</p>
-                      <p className={`text-xs ${(rec.forecast.long_term || rec.forecast.medium_term * 1.2) > rec.crypto.quote.USD.price ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatPercentage((((rec.forecast.long_term || rec.forecast.medium_term * 1.2) - rec.crypto.quote.USD.price) / rec.crypto.quote.USD.price) * 100)}
-                      </p>
-                    </div>
-                    <div className="text-center bg-gray-800 rounded-lg p-3">
-                      <p className="text-gray-400 text-xs">Confidence</p>
-                      <p className="text-white font-semibold">{rec.forecast.confidence.toFixed(0)}%</p>
-                      <p className="text-gray-400 text-xs">AI confidence</p>
-                    </div>
-                  </div>
-                  
-                  {/* ML Model Scores */}
-                  {rec.forecast.ml_prediction && (
-                    <div className="mt-4 p-4 bg-gray-900 rounded-lg">
-                      <h5 className="text-md font-semibold text-white mb-3">🧠 ML Model Analysis</h5>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        <div className="text-center">
-                          <p className="text-gray-400 text-xs">LSTM Neural</p>
-                          <p className={`text-sm font-semibold ${getScoreColor(Math.abs(rec.forecast.ml_prediction.model_scores.lstm))}`}>
-                            {rec.forecast.ml_prediction.model_scores.lstm.toFixed(1)}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-gray-400 text-xs">ARIMA</p>
-                          <p className={`text-sm font-semibold ${getScoreColor(Math.abs(rec.forecast.ml_prediction.model_scores.arima))}`}>
-                            {rec.forecast.ml_prediction.model_scores.arima.toFixed(1)}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-gray-400 text-xs">Random Forest</p>
-                          <p className={`text-sm font-semibold ${getScoreColor(Math.abs(rec.forecast.ml_prediction.model_scores.random_forest))}`}>
-                            {rec.forecast.ml_prediction.model_scores.random_forest.toFixed(1)}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-gray-400 text-xs">Linear Reg.</p>
-                          <p className={`text-sm font-semibold ${getScoreColor(Math.abs(rec.forecast.ml_prediction.model_scores.linear_regression))}`}>
-                            {rec.forecast.ml_prediction.model_scores.linear_regression.toFixed(1)}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-gray-400 text-xs">Sentiment</p>
-                          <p className={`text-sm font-semibold ${getScoreColor(Math.abs(rec.forecast.ml_prediction.model_scores.sentiment))}`}>
-                            {rec.forecast.ml_prediction.model_scores.sentiment.toFixed(1)}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-gray-700">
-                        <div className="text-center">
-                          <p className="text-gray-400 text-xs">Trend Strength</p>
-                          <p className="text-white font-semibold">{rec.forecast.ml_prediction.trend_strength.toFixed(1)}%</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-gray-400 text-xs">Volatility Forecast</p>
-                          <p className="text-white font-semibold">{rec.forecast.ml_prediction.volatility_forecast.toFixed(1)}%</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Why Buy */}
-                <div>
-                  <h4 className="text-lg font-semibold text-white mb-3">Why {rec.recommendation}?</h4>
+              <div className="mt-4 space-y-4">
+                {/* Reasoning */}
+                <div className="bg-crypto-dark/50 rounded-lg p-4">
+                  <h4 className="text-lg font-semibold text-white mb-3">Why {rec.crypto.symbol}?</h4>
                   <ul className="space-y-2">
                     {rec.reasoning.map((reason, index) => (
-                      <li key={index} className="flex items-start space-x-2">
-                        <span className="text-green-400 mt-1">✓</span>
-                        <span className="text-gray-300 text-sm">{reason}</span>
+                      <li key={index} className="flex items-start gap-2 text-gray-300">
+                        <span className="text-crypto-primary mt-1">•</span>
+                        {reason}
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 {/* Risk Factors */}
-                <div>
+                <div className="bg-crypto-dark/50 rounded-lg p-4">
                   <h4 className="text-lg font-semibold text-white mb-3">Risk Factors</h4>
                   <ul className="space-y-2">
                     {rec.risk_factors.map((risk, index) => (
-                      <li key={index} className="flex items-start space-x-2">
+                      <li key={index} className="flex items-start gap-2 text-gray-300">
                         <span className="text-red-400 mt-1">⚠</span>
-                        <span className="text-gray-300 text-sm">{risk}</span>
+                        {risk}
                       </li>
                     ))}
                   </ul>
                 </div>
+
+                {/* Technical Analysis */}
+                <div className="bg-crypto-dark/50 rounded-lg p-4">
+                  <h4 className="text-lg font-semibold text-white mb-3">Technical Analysis</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-crypto-primary">{rec.technical_analysis.rsi}</div>
+                      <div className="text-xs text-gray-400">RSI</div>
+                    </div>
+                    <div className="text-center">
+                      <div className={`text-2xl font-bold ${getTrendColor(rec.technical_analysis.trend)}`}>
+                        {rec.technical_analysis.trend}
+                      </div>
+                      <div className="text-xs text-gray-400">Trend</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-crypto-accent">
+                        {formatCurrency(rec.technical_analysis.support_level)}
+                      </div>
+                      <div className="text-xs text-gray-400">Support</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-crypto-accent">
+                        {formatCurrency(rec.technical_analysis.resistance_level)}
+                      </div>
+                      <div className="text-xs text-gray-400">Resistance</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Forecast */}
+                <div className="bg-crypto-dark/50 rounded-lg p-4">
+                  <h4 className="text-lg font-semibold text-white mb-3">Price Forecast</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-3 bg-crypto-dark/30 rounded-lg">
+                      <div className="text-lg font-semibold text-gray-400">1 Week</div>
+                      <div className="text-2xl font-bold text-white">
+                        {formatCurrency(rec.forecast.short_term)}
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        {formatPercentage(((rec.forecast.short_term - rec.crypto.quote.USD.price) / rec.crypto.quote.USD.price) * 100)}
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-crypto-dark/30 rounded-lg">
+                      <div className="text-lg font-semibold text-gray-400">1 Month</div>
+                      <div className="text-2xl font-bold text-white">
+                        {formatCurrency(rec.forecast.medium_term)}
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        {formatPercentage(((rec.forecast.medium_term - rec.crypto.quote.USD.price) / rec.crypto.quote.USD.price) * 100)}
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-crypto-dark/30 rounded-lg">
+                      <div className="text-lg font-semibold text-gray-400">3 Months</div>
+                      <div className="text-2xl font-bold text-white">
+                        {formatCurrency(rec.forecast.long_term)}
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        {formatPercentage(((rec.forecast.long_term - rec.crypto.quote.USD.price) / rec.crypto.quote.USD.price) * 100)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ML Model Insights */}
+                {rec.forecast.ml_prediction && (
+                  <div className="bg-crypto-dark/50 rounded-lg p-4">
+                    <h4 className="text-lg font-semibold text-white mb-3">AI Model Insights</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-400 mb-2">Model Performance</h5>
+                        <div className="space-y-2">
+                          {Object.entries(rec.forecast.ml_prediction.model_scores).map(([model, score]) => (
+                            <div key={model} className="flex items-center justify-between">
+                              <span className="text-sm text-gray-300 capitalize">{model}</span>
+                              <span className={`text-sm font-medium ${getScoreColor(score)}`}>{score}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-400 mb-2">Trend Analysis</h5>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-300">Trend Strength</span>
+                            <span className={`text-sm font-medium ${getScoreColor(rec.forecast.ml_prediction.trend_strength)}`}>
+                              {rec.forecast.ml_prediction.trend_strength}%
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-300">Volatility Forecast</span>
+                            <span className="text-sm font-medium text-crypto-accent">
+                              {rec.forecast.ml_prediction.volatility_forecast}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

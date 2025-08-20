@@ -1,24 +1,14 @@
-import React from 'react'
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity } from 'lucide-react'
+import React, { useState } from 'react'
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, Coins, Globe, ArrowUpRight } from 'lucide-react'
 import { CryptoData } from '../types/crypto'
+import ExpandedStatsView from './ExpandedStatsView'
 
 interface CryptoStatsProps {
   cryptoData: CryptoData[]
 }
 
 const CryptoStats: React.FC<CryptoStatsProps> = ({ cryptoData }) => {
-  if (cryptoData.length === 0) return null
-
-  const totalMarketCap = cryptoData.reduce((sum, crypto) => sum + crypto.quote.USD.market_cap, 0)
-  const totalVolume24h = cryptoData.reduce((sum, crypto) => sum + crypto.quote.USD.volume_24h, 0)
-  
-  const topGainers = [...cryptoData]
-    .sort((a, b) => b.quote.USD.percent_change_24h - a.quote.USD.percent_change_24h)
-    .slice(0, 3)
-  
-  const topLosers = [...cryptoData]
-    .sort((a, b) => a.quote.USD.percent_change_24h - b.quote.USD.percent_change_24h)
-    .slice(0, 3)
+  const [showExpanded, setShowExpanded] = useState(false)
 
   const formatCurrency = (value: number) => {
     if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`
@@ -28,80 +18,144 @@ const CryptoStats: React.FC<CryptoStatsProps> = ({ cryptoData }) => {
     return `$${value.toFixed(2)}`
   }
 
-  const formatPercentage = (value: number) => {
-    const isPositive = value >= 0
-    return (
-      <span className={`flex items-center gap-1 ${isPositive ? 'text-crypto-success' : 'text-crypto-danger'}`}>
-        {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-        {Math.abs(value).toFixed(2)}%
-      </span>
-    )
+  const formatNumber = (value: number) => {
+    if (value >= 1e12) return `${(value / 1e12).toFixed(2)}T`
+    if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`
+    if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`
+    if (value >= 1e3) return `${(value / 1e3).toFixed(2)}K`
+    return value.toFixed(0)
   }
 
+  const formatPercentage = (value: number) => {
+    const sign = value >= 0 ? '+' : ''
+    return `${sign}${value.toFixed(2)}%`
+  }
+
+  // Calculate market statistics
+  const totalMarketCap = cryptoData.reduce((sum, crypto) => sum + crypto.quote.USD.market_cap, 0)
+  const totalVolume = cryptoData.reduce((sum, crypto) => sum + crypto.quote.USD.volume_24h, 0)
+  const totalSupply = cryptoData.reduce((sum, crypto) => sum + crypto.circulating_supply, 0)
+  
+  // Top gainers and losers
+  const topGainers = [...cryptoData]
+    .sort((a, b) => b.quote.USD.percent_change_24h - a.quote.USD.percent_change_24h)
+    .slice(0, 3)
+  
+  const topLosers = [...cryptoData]
+    .sort((a, b) => a.quote.USD.percent_change_24h - b.quote.USD.percent_change_24h)
+    .slice(0, 3)
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {/* Total Market Cap */}
-      <div className="glass-card p-6 hover-lift">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-gray-300 text-sm">Total Market Cap</p>
-            <p className="text-2xl font-bold text-white">{formatCurrency(totalMarketCap)}</p>
-          </div>
-          <div className="w-12 h-12 bg-gradient-to-br from-crypto-primary to-crypto-secondary rounded-lg flex items-center justify-center">
-            <DollarSign className="w-6 h-6 text-white" />
+    <>
+      <div 
+        className="glass-card p-6 hover-lift group cursor-pointer"
+        onClick={() => setShowExpanded(true)}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold gradient-text flex items-center gap-2">
+            <BarChart3 className="w-6 h-6" />
+            Market Overview
+          </h2>
+          <div className="w-8 h-8 bg-crypto-accent/20 rounded-full flex items-center justify-center group-hover:bg-crypto-accent/30 transition-colors">
+            <ArrowUpRight className="w-4 h-4 text-crypto-accent" />
           </div>
         </div>
-      </div>
 
-      {/* 24h Volume */}
-      <div className="glass-card p-6 hover-lift">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-gray-300 text-sm">24h Volume</p>
-            <p className="text-2xl font-bold text-white">{formatCurrency(totalVolume24h)}</p>
-          </div>
-          <div className="w-12 h-12 bg-gradient-to-br from-crypto-accent to-crypto-primary rounded-lg flex items-center justify-center">
-            <Activity className="w-6 h-6 text-white" />
-          </div>
-        </div>
-      </div>
-
-      {/* Top Gainers */}
-      <div className="glass-card p-6 hover-lift">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-gray-300 text-sm">Top Gainers (24h)</p>
-          <div className="w-10 h-10 bg-gradient-to-br from-crypto-success to-green-400 rounded-lg flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-white" />
-          </div>
-        </div>
-        <div className="space-y-2">
-          {topGainers.map((crypto) => (
-            <div key={crypto.id} className="flex items-center justify-between text-sm">
-              <span className="text-white font-medium">{crypto.symbol}</span>
-              {formatPercentage(crypto.quote.USD.percent_change_24h)}
+        {/* Main Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="text-center p-4 bg-crypto-darker/30 rounded-lg">
+            <div className="flex items-center justify-center w-12 h-12 bg-green-500/20 rounded-full mx-auto mb-3">
+              <DollarSign className="w-6 h-6 text-green-400" />
             </div>
-          ))}
+            <div className="text-2xl font-bold text-white mb-1">
+              {formatCurrency(totalMarketCap)}
+            </div>
+            <div className="text-sm text-gray-400">Total Market Cap</div>
+          </div>
+
+          <div className="text-center p-4 bg-crypto-darker/30 rounded-lg">
+            <div className="flex items-center justify-center w-12 h-12 bg-blue-500/20 rounded-full mx-auto mb-3">
+              <Activity className="w-6 h-6 text-blue-400" />
+            </div>
+            <div className="text-2xl font-bold text-white mb-1">
+              {formatCurrency(totalVolume)}
+            </div>
+            <div className="text-sm text-gray-400">24h Volume</div>
+          </div>
+
+          <div className="text-center p-4 bg-crypto-darker/30 rounded-lg">
+            <div className="flex items-center justify-center w-12 h-12 bg-purple-500/20 rounded-full mx-auto mb-3">
+              <Coins className="w-6 h-6 text-purple-400" />
+            </div>
+            <div className="text-2xl font-bold text-white mb-1">
+              {formatNumber(totalSupply)}
+            </div>
+            <div className="text-sm text-gray-400">Total Supply</div>
+          </div>
+        </div>
+
+        {/* Top Performers */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-green-500" />
+              Top Gainers (24h)
+            </h3>
+            <div className="space-y-2">
+              {topGainers.map((crypto, index) => (
+                <div key={crypto.id} className="flex items-center justify-between p-2 bg-crypto-dark/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-br from-crypto-primary to-crypto-secondary rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {crypto.symbol.charAt(0)}
+                    </div>
+                    <span className="text-white text-sm font-medium">{crypto.symbol}</span>
+                  </div>
+                  <div className="text-green-400 font-semibold text-sm">
+                    +{crypto.quote.USD.percent_change_24h.toFixed(2)}%
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <TrendingDown className="w-5 h-5 text-red-500" />
+              Top Losers (24h)
+            </h3>
+            <div className="space-y-2">
+              {topLosers.map((crypto, index) => (
+                <div key={crypto.id} className="flex items-center justify-between p-2 bg-crypto-dark/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-br from-crypto-primary to-crypto-secondary rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {crypto.symbol.charAt(0)}
+                    </div>
+                    <span className="text-white text-sm font-medium">{crypto.symbol}</span>
+                  </div>
+                  <div className="text-red-400 font-semibold text-sm">
+                    {crypto.quote.USD.percent_change_24h.toFixed(2)}%
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Click Indicator */}
+        <div className="mt-6 pt-4 border-t border-crypto-accent/20 text-center">
+          <span className="text-sm text-crypto-accent group-hover:text-crypto-primary transition-colors">
+            Click to view detailed market analysis
+          </span>
         </div>
       </div>
 
-      {/* Top Losers */}
-      <div className="glass-card p-6 hover-lift">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-gray-300 text-sm">Top Losers (24h)</p>
-          <div className="w-10 h-10 bg-gradient-to-br from-crypto-danger to-red-400 rounded-lg flex items-center justify-center">
-            <TrendingDown className="w-5 h-5 text-white" />
-          </div>
-        </div>
-        <div className="space-y-2">
-          {topLosers.map((crypto) => (
-            <div key={crypto.id} className="flex items-center justify-between text-sm">
-              <span className="text-white font-medium">{crypto.symbol}</span>
-              {formatPercentage(crypto.quote.USD.percent_change_24h)}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+      {showExpanded && (
+        <ExpandedStatsView 
+          cryptoData={cryptoData} 
+          onClose={() => setShowExpanded(false)} 
+        />
+      )}
+    </>
   )
 }
 

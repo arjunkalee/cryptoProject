@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Search, RefreshCw, TrendingUp, DollarSign, BarChart3 } from 'lucide-react'
+import UserProfile from './UserProfile'
 
 interface HeaderProps {
   searchTerm: string
@@ -11,6 +12,8 @@ interface HeaderProps {
   searchResultsCount?: number
   totalResultsCount?: number
   allCryptoData?: Array<{ name: string; symbol: string; cmc_rank: number }>
+  user?: { id: string; email: string; username: string; createdAt: Date; lastLoginAt: Date } | null
+  onLogout?: () => void
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -21,7 +24,9 @@ const Header: React.FC<HeaderProps> = ({
   onRefresh,
   loading,
   searchResultsCount,
-  totalResultsCount
+  totalResultsCount,
+  user,
+  onLogout
 }) => {
   return (
     <header className="glass-card sticky top-0 z-50 backdrop-blur-xl">
@@ -101,6 +106,11 @@ const Header: React.FC<HeaderProps> = ({
               <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
               {loading ? 'Loading...' : 'Refresh'}
             </button>
+
+            {/* User Profile */}
+            {user && onLogout && (
+              <UserProfile user={user} onLogout={onLogout} />
+            )}
           </div>
         </div>
       </div>

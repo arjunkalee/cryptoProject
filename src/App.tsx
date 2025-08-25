@@ -6,11 +6,21 @@ import CryptoRecommendations from './components/CryptoRecommendations'
 import LoadingSpinner from './components/LoadingSpinner'
 import AssetFilters from './components/AssetFilters'
 import FilterSummary from './components/FilterSummary'
+import AuthModal from './components/AuthModal'
 import { CryptoData, CryptoRecommendation } from './types/crypto'
+import { User, LoginCredentials, RegisterCredentials } from './types/auth'
 import { fetchCryptoData } from './services/cryptoApi'
 import { getTopCryptoRecommendations } from './services/cryptoRecommendations'
+import { authService } from './services/authService'
 
 function App() {
+  // Authentication state
+  const [user, setUser] = useState<User | null>(null)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
+  
+  // Crypto data state
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([])
   const [cryptoRecommendations, setCryptoRecommendations] = useState<CryptoRecommendation[]>([])
   const [loading, setLoading] = useState(true)
@@ -19,11 +29,11 @@ function App() {
   const [sortBy, setSortBy] = useState<'market_cap' | 'price' | 'change_24h'>('market_cap')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const defaultFilters = {
-    marketCapRange: [0, 1000000000000], // 0 to 1T
-    volumeRange: [0, 100000000000], // 0 to 100B
-    priceRange: [0, 100000], // 0 to 100K
-    change24hRange: [-100, 100], // -100% to +100%
-    change7dRange: [-100, 100], // -100% to +100%
+    marketCapRange: [0, 1000000000000] as [number, number], // 0 to 1T
+    volumeRange: [0, 100000000000] as [number, number], // 0 to 100B
+    priceRange: [0, 100000] as [number, number], // 0 to 100K
+    change24hRange: [-100, 100] as [number, number], // -100% to +100%
+    change7dRange: [-100, 100] as [number, number], // -100% to +100%
     marketCapSort: 'desc' as 'asc' | 'desc',
     volumeSort: 'desc' as 'asc' | 'desc',
     priceSort: 'desc' as 'asc' | 'desc',
@@ -31,20 +41,76 @@ function App() {
     change7dSort: 'desc' as 'asc' | 'desc'
   }
   
-  const [assetFilters, setAssetFilters] = useState(defaultFilters)
+  const [assetFilters, setAssetFilters] = useState<typeof defaultFilters>(defaultFilters)
   
   const resetFilters = () => {
     setAssetFilters(defaultFilters)
   }
 
+  // Authentication handlers
+  const handleLogin = async (credentials: LoginCredentials) => {
+    try {
+      setAuthLoading(true)
+      setAuthError(null)
+      
+      const response = await authService.login(credentials)
+      setUser(response.user)
+      setShowAuthModal(false)
+      setAuthError(null)
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Login failed')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleRegister = async (credentials: RegisterCredentials) => {
+    try {
+      setAuthLoading(true)
+      setAuthError(null)
+      
+      const response = await authService.register(credentials)
+      setUser(response.user)
+      setShowAuthModal(false)
+      setAuthError(null)
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Registration failed')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleLogout = () => {
+    authService.logout()
+    setUser(null)
+    setShowAuthModal(true)
+  }
+
   useEffect(() => {
-    loadCryptoData()
+    // Initialize authentication service
+    authService.init()
     
-    // Refresh data every 5 minutes
-    const interval = setInterval(loadCryptoData, 5 * 60 * 1000)
-    
-    return () => clearInterval(interval)
+    // Check if user is already authenticated
+    const currentUser = authService.getCurrentUser()
+    if (currentUser) {
+      setUser(currentUser)
+    } else {
+      // Show auth modal on first visit
+      setShowAuthModal(true)
+    }
   }, [])
+
+  useEffect(() => {
+    // Only load crypto data if user is authenticated
+    if (user) {
+      loadCryptoData()
+      
+      // Refresh data every 5 minutes
+      const interval = setInterval(loadCryptoData, 5 * 60 * 1000)
+      
+      return () => clearInterval(interval)
+    }
+  }, [user])
 
   const loadCryptoData = async () => {
     try {
@@ -114,8 +180,34 @@ function App() {
     }
   })
 
-  if (loading) {
+  // Show loading spinner only when user is authenticated but crypto data is still loading
+  if (user && loading) {
     return <LoadingSpinner />
+  }
+
+  // Show auth modal when no user is logged in
+  if (!user) {
+    return (
+      <>
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onLogin={handleLogin}
+          onRegister={handleRegister}
+          isLoading={authLoading}
+          error={authError}
+        />
+        <div className="min-h-screen bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-800 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-crypto-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-8 h-8 bg-crypto-primary rounded-full"></div>
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Welcome to Crypto Tracker</h1>
+            <p className="text-gray-400">Please sign in or create an account to continue</p>
+          </div>
+        </div>
+      </>
+    )
   }
 
   return (
@@ -130,6 +222,8 @@ function App() {
         searchResultsCount={filteredCryptoData.length}
         totalResultsCount={cryptoData.length}
         allCryptoData={cryptoData}
+        user={user}
+        onLogout={handleLogout}
       />
       
       <main className="container mx-auto px-4 py-8">

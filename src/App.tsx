@@ -1,116 +1,62 @@
 import React, { useState, useEffect } from 'react'
 import Header from './components/Header'
-import CryptoGrid from './components/CryptoGrid'
-import CryptoStats from './components/CryptoStats'
 import CryptoRecommendations from './components/CryptoRecommendations'
+import CryptoStats from './components/CryptoStats'
+import CryptoGrid from './components/CryptoGrid'
 import LoadingSpinner from './components/LoadingSpinner'
+import AuthModal from './components/AuthModal'
 import AssetFilters from './components/AssetFilters'
 import FilterSummary from './components/FilterSummary'
-import AuthModal from './components/AuthModal'
-import { CryptoData, CryptoRecommendation } from './types/crypto'
-import { User, LoginCredentials, RegisterCredentials } from './types/auth'
 import { fetchCryptoData } from './services/cryptoApi'
 import { getTopCryptoRecommendations } from './services/cryptoRecommendations'
 import { authService } from './services/authService'
+import { User, LoginCredentials, RegisterCredentials } from './types/auth'
+import { CryptoData, CryptoRecommendation } from './types/crypto'
+import './index.css'
 
 function App() {
+  const [cryptoData, setCryptoData] = useState<CryptoData[]>([])
+  const [cryptoRecommendations, setCryptoRecommendations] = useState<CryptoRecommendation[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortBy, setSortBy] = useState<'market_cap' | 'price' | 'change_24h'>('market_cap')
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [assetFilters, setAssetFilters] = useState({
+    marketCapRange: [0, 1000000000000] as [number, number],
+    volumeRange: [0, 100000000000] as [number, number],
+    priceRange: [0, 100000] as [number, number],
+    change24hRange: [-100, 100] as [number, number],
+    change7dRange: [-100, 100] as [number, number],
+    marketCapSort: 'desc' as 'asc' | 'desc',
+    volumeSort: 'desc' as 'asc' | 'desc',
+    priceSort: 'desc' as 'asc' | 'desc',
+    change24hSort: 'desc' as 'asc' | 'desc',
+    change7dSort: 'desc' as 'asc' | 'desc'
+  })
+
   // Authentication state
   const [user, setUser] = useState<User | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
-  
-  // Crypto data state
-  const [cryptoData, setCryptoData] = useState<CryptoData[]>([])
-  const [cryptoRecommendations, setCryptoRecommendations] = useState<CryptoRecommendation[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [sortBy, setSortBy] = useState<'market_cap' | 'price' | 'change_24h'>('market_cap')
-  const [filtersOpen, setFiltersOpen] = useState(false)
+
   const defaultFilters = {
-    marketCapRange: [0, 1000000000000] as [number, number], // 0 to 1T
-    volumeRange: [0, 100000000000] as [number, number], // 0 to 100B
-    priceRange: [0, 100000] as [number, number], // 0 to 100K
-    change24hRange: [-100, 100] as [number, number], // -100% to +100%
-    change7dRange: [-100, 100] as [number, number], // -100% to +100%
+    marketCapRange: [0, 1000000000000] as [number, number],
+    volumeRange: [0, 100000000000] as [number, number],
+    priceRange: [0, 100000] as [number, number],
+    change24hRange: [-100, 100] as [number, number],
+    change7dRange: [-100, 100] as [number, number],
     marketCapSort: 'desc' as 'asc' | 'desc',
     volumeSort: 'desc' as 'asc' | 'desc',
     priceSort: 'desc' as 'asc' | 'desc',
     change24hSort: 'desc' as 'asc' | 'desc',
     change7dSort: 'desc' as 'asc' | 'desc'
   }
-  
-  const [assetFilters, setAssetFilters] = useState<typeof defaultFilters>(defaultFilters)
-  
+
   const resetFilters = () => {
     setAssetFilters(defaultFilters)
   }
-
-  // Authentication handlers
-  const handleLogin = async (credentials: LoginCredentials) => {
-    try {
-      setAuthLoading(true)
-      setAuthError(null)
-      
-      const response = await authService.login(credentials)
-      setUser(response.user)
-      setShowAuthModal(false)
-      setAuthError(null)
-    } catch (err) {
-      setAuthError(err instanceof Error ? err.message : 'Login failed')
-    } finally {
-      setAuthLoading(false)
-    }
-  }
-
-  const handleRegister = async (credentials: RegisterCredentials) => {
-    try {
-      setAuthLoading(true)
-      setAuthError(null)
-      
-      const response = await authService.register(credentials)
-      setUser(response.user)
-      setShowAuthModal(false)
-      setAuthError(null)
-    } catch (err) {
-      setAuthError(err instanceof Error ? err.message : 'Registration failed')
-    } finally {
-      setAuthLoading(false)
-    }
-  }
-
-  const handleLogout = () => {
-    authService.logout()
-    setUser(null)
-    setShowAuthModal(true)
-  }
-
-  useEffect(() => {
-    // Initialize authentication service
-    authService.init()
-    
-    // Check if user is already authenticated
-    const currentUser = authService.getCurrentUser()
-    if (currentUser) {
-      setUser(currentUser)
-    } else {
-      // Show auth modal on first visit
-      setShowAuthModal(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    // Only load crypto data if user is authenticated
-    if (user) {
-      loadCryptoData()
-      
-      // Refresh data every 5 minutes
-      const interval = setInterval(loadCryptoData, 5 * 60 * 1000)
-      
-      return () => clearInterval(interval)
-    }
-  }, [user])
 
   const loadCryptoData = async () => {
     try {
@@ -123,69 +69,158 @@ function App() {
       const recommendations = getTopCryptoRecommendations(data)
       setCryptoRecommendations(recommendations)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch crypto data')
+      setError(err instanceof Error ? err.message : 'Failed to load crypto data')
     } finally {
       setLoading(false)
     }
   }
 
+  const handleLogin = async (credentials: LoginCredentials) => {
+    setAuthLoading(true)
+    setAuthError(null)
+    try {
+      const response = await authService.login(credentials)
+      setUser(response.user)
+      setShowAuthModal(false)
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Login failed')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleRegister = async (credentials: RegisterCredentials) => {
+    setAuthLoading(true)
+    setAuthError(null)
+    try {
+      const response = await authService.register(credentials)
+      setUser(response.user)
+      setShowAuthModal(false)
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Registration failed')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleLogout = () => {
+    authService.logout()
+    setUser(null)
+  }
+
+  // Check authentication on mount
+  useEffect(() => {
+    authService.init()
+    const currentUser = authService.getCurrentUser()
+    if (currentUser) {
+      setUser(currentUser)
+    } else {
+      setShowAuthModal(true)
+    }
+  }, [])
+
+  // Load crypto data when user is authenticated
+  useEffect(() => {
+    if (user) {
+      loadCryptoData()
+      const interval = setInterval(loadCryptoData, 5 * 60 * 1000) // Refresh every 5 minutes
+      return () => clearInterval(interval)
+    }
+  }, [user])
+
+  // Filter crypto data based on search term and filters
   const filteredCryptoData = cryptoData.filter(crypto => {
     // Text search filter
     const matchesSearch = 
+      searchTerm === '' || 
       crypto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       crypto.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
       crypto.cmc_rank.toString().includes(searchTerm)
     
     if (!matchesSearch) return false
     
-    // Market cap filter
+    // Apply filters
     const marketCap = crypto.quote.USD.market_cap
     if (marketCap < assetFilters.marketCapRange[0] || marketCap > assetFilters.marketCapRange[1]) return false
     
-    // Volume filter
     const volume = crypto.quote.USD.volume_24h
     if (volume < assetFilters.volumeRange[0] || volume > assetFilters.volumeRange[1]) return false
     
-    // Price filter
     const price = crypto.quote.USD.price
     if (price < assetFilters.priceRange[0] || price > assetFilters.priceRange[1]) return false
     
-    // 24h change filter
     const change24h = crypto.quote.USD.percent_change_24h
     if (change24h < assetFilters.change24hRange[0] || change24h > assetFilters.change24hRange[1]) return false
     
-    // 7d change filter
     const change7d = crypto.quote.USD.percent_change_7d
     if (change7d < assetFilters.change7dRange[0] || change7d > assetFilters.change7dRange[1]) return false
     
     return true
   })
 
-  const sortedCryptoData = [...filteredCryptoData].sort((a, b) => {
-    switch (sortBy) {
-      case 'market_cap':
-        return assetFilters.marketCapSort === 'desc' 
-          ? b.quote.USD.market_cap - a.quote.USD.market_cap
-          : a.quote.USD.market_cap - b.quote.USD.market_cap
-      case 'price':
-        return assetFilters.priceSort === 'desc'
-          ? b.quote.USD.price - a.quote.USD.price
-          : a.quote.USD.price - b.quote.USD.price
-      case 'change_24h':
-        return assetFilters.change24hSort === 'desc'
-          ? b.quote.USD.percent_change_24h - a.quote.USD.percent_change_24h
-          : a.quote.USD.percent_change_24h - b.quote.USD.percent_change_24h
-      default:
-        return 0
-    }
+  // Filter recommendations based on search and filters
+  const filteredRecommendations = cryptoRecommendations.filter(rec => {
+    // Text search filter
+    const matchesSearch = 
+      searchTerm === '' || 
+      rec.crypto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rec.crypto.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rec.crypto.cmc_rank.toString().includes(searchTerm)
+    
+    if (!matchesSearch) return false
+    
+    // Apply same filters as main grid
+    const marketCap = rec.crypto.quote.USD.market_cap
+    if (marketCap < assetFilters.marketCapRange[0] || marketCap > assetFilters.marketCapRange[1]) return false
+    
+    const volume = rec.crypto.quote.USD.volume_24h
+    if (volume < assetFilters.volumeRange[0] || volume > assetFilters.volumeRange[1]) return false
+    
+    const price = rec.crypto.quote.USD.price
+    if (price < assetFilters.priceRange[0] || price > assetFilters.priceRange[1]) return false
+    
+    const change24h = rec.crypto.quote.USD.percent_change_24h
+    if (change24h < assetFilters.change24hRange[0] || change24h > assetFilters.change24hRange[1]) return false
+    
+    const change7d = rec.crypto.quote.USD.percent_change_7d
+    if (change7d < assetFilters.change7dRange[0] || change7d > assetFilters.change7dRange[1]) return false
+    
+    return true
   })
 
-  // Show loading spinner only when user is authenticated but crypto data is still loading
+  // Sort crypto data
+  const sortedCryptoData = [...filteredCryptoData].sort((a, b) => {
+    let aValue: number
+    let bValue: number
+    
+    switch (sortBy) {
+      case 'market_cap':
+        aValue = a.quote.USD.market_cap
+        bValue = b.quote.USD.market_cap
+        break
+      case 'price':
+        aValue = a.quote.USD.price
+        bValue = b.quote.USD.price
+        break
+      case 'change_24h':
+        aValue = a.quote.USD.percent_change_24h
+        bValue = b.quote.USD.percent_change_24h
+        // For percentage changes, we want to show the highest absolute values first
+        return Math.abs(bValue) - Math.abs(aValue)
+      default:
+        aValue = a.quote.USD.market_cap
+        bValue = b.quote.USD.market_cap
+    }
+    
+    return bValue - aValue
+  })
+
+  // Show loading spinner while user is authenticated but data is loading
   if (user && loading) {
     return <LoadingSpinner />
   }
 
-  // Show auth modal when no user is logged in
+  // Show auth modal and welcome screen if user is not authenticated
   if (!user) {
     return (
       <>
@@ -241,36 +276,7 @@ function App() {
         
         {/* Top 5 Crypto Recommendations - Now at the top */}
         <div className="mb-8">
-          <CryptoRecommendations 
-            recommendations={cryptoRecommendations.filter(rec => {
-              // Text search filter
-              const matchesSearch = 
-                searchTerm === '' || 
-                rec.crypto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                rec.crypto.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                rec.crypto.cmc_rank.toString().includes(searchTerm)
-              
-              if (!matchesSearch) return false
-              
-              // Apply same filters as main grid
-              const marketCap = rec.crypto.quote.USD.market_cap
-              if (marketCap < assetFilters.marketCapRange[0] || marketCap > assetFilters.marketCapRange[1]) return false
-              
-              const volume = rec.crypto.quote.USD.volume_24h
-              if (volume < assetFilters.volumeRange[0] || volume > assetFilters.volumeRange[1]) return false
-              
-              const price = rec.crypto.quote.USD.price
-              if (price < assetFilters.priceRange[0] || price > assetFilters.priceRange[1]) return false
-              
-              const change24h = rec.crypto.quote.USD.percent_change_24h
-              if (change24h < assetFilters.change24hRange[0] || change24h > assetFilters.change24hRange[1]) return false
-              
-              const change7d = rec.crypto.quote.USD.percent_change_7d
-              if (change7d < assetFilters.change7dRange[0] || change7d > assetFilters.change7dRange[1]) return false
-              
-              return true
-            })} 
-          />
+          <CryptoRecommendations recommendations={filteredRecommendations} />
         </div>
         
         <CryptoStats cryptoData={cryptoData} />

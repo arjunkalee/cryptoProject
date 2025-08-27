@@ -1,12 +1,6 @@
-import React, { useState } from 'react'
-import { X, User, Eye, Palette, Shield, Bell, ArrowLeft, Save, Globe, Lock, Smartphone, Mail } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { User, Eye, Palette, Shield, Bell, ArrowLeft, Save, Globe, Lock, Smartphone, Mail, Check } from 'lucide-react'
 import { User as UserType } from '../types/auth'
-
-interface SettingsPageProps {
-  user: UserType
-  isOpen: boolean
-  onClose: () => void
-}
 
 interface SettingsState {
   // User Information
@@ -35,7 +29,11 @@ interface SettingsState {
   marketing: boolean
 }
 
-export default function SettingsPage({ user, isOpen, onClose }: SettingsPageProps) {
+interface SettingsPageProps {
+  user: UserType
+}
+
+export default function SettingsPage({ user }: SettingsPageProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'accessibility' | 'theme' | 'notifications' | 'privacy'>('profile')
   const [settings, setSettings] = useState<SettingsState>({
     username: user.username,
@@ -54,9 +52,65 @@ export default function SettingsPage({ user, isOpen, onClose }: SettingsPageProp
     analytics: true,
     marketing: false
   })
+  const [saved, setSaved] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Load saved settings from localStorage
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('userSettings')
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings)
+        setSettings(prev => ({ ...prev, ...parsed }))
+      } catch (error) {
+        console.error('Failed to load saved settings:', error)
+      }
+    }
+  }, [])
 
   const updateSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }))
+    setSaved(false)
+  }
+
+  const saveSettings = async () => {
+    setIsLoading(true)
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Save to localStorage
+      localStorage.setItem('userSettings', JSON.stringify(settings))
+      
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const exportData = () => {
+    const dataStr = JSON.stringify(settings, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'crypto-settings.json'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const deleteAccount = () => {
+    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      // Simulate account deletion
+      alert('Account deletion requested. This would typically require additional verification.')
+    }
+  }
+
+  const goBack = () => {
+    window.history.back()
   }
 
   const tabs = [
@@ -67,20 +121,15 @@ export default function SettingsPage({ user, isOpen, onClose }: SettingsPageProp
     { id: 'privacy', label: 'Privacy', icon: Shield, description: 'Manage your data & security' }
   ] as const
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div 
-        className="bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-900 border border-crypto-accent/30 rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="relative bg-gradient-to-r from-crypto-primary/10 via-crypto-accent/5 to-crypto-primary/10 p-6 border-b border-crypto-accent/20">
+    <div className="min-h-screen bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-900">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-crypto-primary/10 via-crypto-accent/5 to-crypto-primary/10 border-b border-crypto-accent/20">
+        <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={onClose}
+                onClick={goBack}
                 className="p-2 hover:bg-crypto-accent/20 rounded-xl transition-all duration-200 hover:scale-105"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-300" />
@@ -93,17 +142,27 @@ export default function SettingsPage({ user, isOpen, onClose }: SettingsPageProp
               </div>
             </div>
             <button
-              onClick={onClose}
-              className="p-2 hover:bg-red-500/20 rounded-xl transition-all duration-200 hover:scale-105 group"
+              onClick={saveSettings}
+              disabled={isLoading}
+              className="px-6 py-2 bg-gradient-to-r from-crypto-primary to-crypto-accent hover:from-crypto-primary/90 hover:to-crypto-accent/90 text-white font-semibold rounded-xl transition-all duration-200 hover:scale-105 shadow-lg shadow-crypto-primary/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <X className="w-5 h-5 text-gray-400 group-hover:text-red-400" />
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : saved ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {isLoading ? 'Saving...' : saved ? 'Saved!' : 'Save All'}
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="flex h-[calc(95vh-120px)]">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex gap-8">
           {/* Sidebar */}
-          <div className="w-72 bg-crypto-dark/30 border-r border-crypto-accent/20 p-6">
+          <div className="w-80 bg-crypto-dark/30 border border-crypto-accent/20 rounded-2xl p-6 h-fit sticky top-8">
             <nav className="space-y-3">
               {tabs.map((tab) => {
                 const Icon = tab.icon
@@ -144,7 +203,7 @@ export default function SettingsPage({ user, isOpen, onClose }: SettingsPageProp
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-8 overflow-y-auto">
+          <div className="flex-1">
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <div className="space-y-8">
@@ -177,13 +236,6 @@ export default function SettingsPage({ user, isOpen, onClose }: SettingsPageProp
                       className="w-full px-4 py-3 bg-crypto-dark border border-crypto-accent/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-crypto-primary focus:border-transparent transition-all"
                       placeholder="Enter your email"
                     />
-                  </div>
-                  
-                  <div className="pt-4">
-                    <button className="w-full px-8 py-3 bg-gradient-to-r from-crypto-primary to-crypto-accent hover:from-crypto-primary/90 hover:to-crypto-accent/90 text-white font-semibold rounded-xl transition-all duration-200 hover:scale-105 shadow-lg shadow-crypto-primary/20 flex items-center justify-center gap-2">
-                      <Save className="w-5 h-5" />
-                      Save Changes
-                    </button>
                   </div>
                 </div>
               </div>
@@ -462,11 +514,17 @@ export default function SettingsPage({ user, isOpen, onClose }: SettingsPageProp
                       Account Actions
                     </h3>
                     <div className="space-y-3">
-                      <button className="w-full px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center gap-2">
+                      <button 
+                        onClick={exportData}
+                        className="w-full px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center gap-2"
+                      >
                         <Globe className="w-4 h-4" />
                         Export My Data
                       </button>
-                      <button className="w-full px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center gap-2">
+                      <button 
+                        onClick={deleteAccount}
+                        className="w-full px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl transition-all duration-200 hover:scale-105 flex items-center justify-center gap-2"
+                      >
                         <Lock className="w-4 h-4" />
                         Delete Account
                       </button>

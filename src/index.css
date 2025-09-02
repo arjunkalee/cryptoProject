@@ -10,12 +10,22 @@
   body {
     @apply bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-800 text-white;
     min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Light theme styles */
+  .light body {
+    @apply bg-gradient-to-br from-crypto-light-bg via-gray-50 to-crypto-light-surface text-crypto-light-text;
   }
 }
 
 @layer components {
   .glass-card {
     @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-xl;
+  }
+  
+  .light .glass-card {
+    @apply bg-white/80 backdrop-blur-lg border border-crypto-light-border rounded-xl shadow-xl;
   }
   
   .gradient-text {

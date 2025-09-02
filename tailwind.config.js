@@ -4,6 +4,7 @@ module.exports = {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -15,7 +16,13 @@ module.exports = {
           warning: '#f59e0b',
           danger: '#ef4444',
           dark: '#1e293b',
-          darker: '#0f172a'
+          darker: '#0f172a',
+          // Light theme colors
+          'light-bg': '#f8fafc',
+          'light-surface': '#ffffff',
+          'light-border': '#e2e8f0',
+          'light-text': '#1e293b',
+          'light-text-secondary': '#64748b'
         }
       },
       animation: {

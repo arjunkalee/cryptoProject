@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Header from './components/Header'
 import CryptoRecommendations from './components/CryptoRecommendations'
 import CryptoStats from './components/CryptoStats'
@@ -7,6 +7,8 @@ import LoadingSpinner from './components/LoadingSpinner'
 import AuthModal from './components/AuthModal'
 import AssetFilters from './components/AssetFilters'
 import FilterSummary from './components/FilterSummary'
+import SettingsSidebar from './components/SettingsSidebar'
+import { ThemeProvider, useTheme } from './contexts/ThemeContext'
 import { fetchCryptoData } from './services/cryptoApi'
 import { getTopCryptoRecommendations } from './services/cryptoRecommendations'
 import { authService } from './services/authService'
@@ -14,7 +16,8 @@ import { User, LoginCredentials, RegisterCredentials } from './types/auth'
 import { CryptoData, CryptoRecommendation } from './types/crypto'
 import './index.css'
 
-function App() {
+function AppContent() {
+  const { isDark } = useTheme()
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([])
   const [cryptoRecommendations, setCryptoRecommendations] = useState<CryptoRecommendation[]>([])
   const [loading, setLoading] = useState(false)
@@ -40,6 +43,9 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
+
+  // Settings sidebar state
+  const [showSettings, setShowSettings] = useState(false)
 
   const defaultFilters = {
     marketCapRange: [0, 1000000000000] as [number, number],
@@ -232,13 +238,19 @@ function App() {
           isLoading={authLoading}
           error={authError}
         />
-        <div className="min-h-screen bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-800 flex items-center justify-center">
+        <div className={`min-h-screen transition-all duration-300 flex items-center justify-center ${
+          isDark 
+            ? 'bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-800' 
+            : 'bg-gradient-to-br from-crypto-light-bg via-gray-50 to-crypto-light-surface'
+        }`}>
           <div className="text-center">
             <div className="w-16 h-16 bg-crypto-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <div className="w-8 h-8 bg-crypto-primary rounded-full"></div>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Welcome to Crypto Tracker</h1>
-            <p className="text-gray-400">Please sign in or create an account to continue</p>
+            <h1 className={`text-2xl font-bold mb-2 ${
+              isDark ? 'text-white' : 'text-crypto-light-text'
+            }`}>Welcome to Crypto Tracker</h1>
+            <p className={isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}>Please sign in or create an account to continue</p>
           </div>
         </div>
       </>
@@ -246,7 +258,11 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-800">
+    <div className={`min-h-screen transition-all duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-800' 
+        : 'bg-gradient-to-br from-crypto-light-bg via-gray-50 to-crypto-light-surface'
+    }`}>
       <Header 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -259,6 +275,7 @@ function App() {
         allCryptoData={cryptoData}
         user={user}
         onLogout={handleLogout}
+        onSettingsToggle={() => setShowSettings(true)}
       />
       
       <main className="container mx-auto px-4 py-8">
@@ -303,7 +320,24 @@ function App() {
           <CryptoGrid cryptoData={sortedCryptoData} />
         </div>
       </main>
+
+      {/* Settings Sidebar */}
+      {user && (
+        <SettingsSidebar 
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          user={user}
+        />
+      )}
     </div>
+  )
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   )
 }
 

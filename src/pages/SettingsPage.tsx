@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { User, Eye, Palette, Shield, Bell, ArrowLeft, Save, Globe, Lock, Smartphone, Mail, Check } from 'lucide-react'
 import { User as UserType } from '../types/auth'
+import { useTheme, Theme } from '../contexts/ThemeContext'
 
 interface SettingsState {
   // User Information
@@ -34,6 +35,7 @@ interface SettingsPageProps {
 }
 
 export default function SettingsPage({ user }: SettingsPageProps) {
+  const { theme, setTheme, isDark } = useTheme()
   const [activeTab, setActiveTab] = useState<'profile' | 'accessibility' | 'theme' | 'notifications' | 'privacy'>('profile')
   const [settings, setSettings] = useState<SettingsState>({
     username: user.username,
@@ -42,7 +44,7 @@ export default function SettingsPage({ user }: SettingsPageProps) {
     highContrast: false,
     reduceMotion: false,
     screenReader: false,
-    theme: 'dark',
+    theme: theme,
     accentColor: 'blue',
     emailNotifications: true,
     pushNotifications: false,
@@ -71,6 +73,11 @@ export default function SettingsPage({ user }: SettingsPageProps) {
   const updateSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }))
     setSaved(false)
+    
+    // Apply theme changes immediately
+    if (key === 'theme') {
+      setTheme(value as Theme)
+    }
   }
 
   const saveSettings = async () => {
@@ -83,7 +90,11 @@ export default function SettingsPage({ user }: SettingsPageProps) {
       localStorage.setItem('userSettings', JSON.stringify(settings))
       
       setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      
+      // Reload the page after a short delay to show the saved state
+      setTimeout(() => {
+        window.location.reload()
+      }, 1500)
     } catch (error) {
       console.error('Failed to save settings:', error)
     } finally {
@@ -122,7 +133,11 @@ export default function SettingsPage({ user }: SettingsPageProps) {
   ] as const
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-900">
+    <div className={`min-h-screen transition-all duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-crypto-darker via-crypto-dark to-slate-900' 
+        : 'bg-gradient-to-br from-crypto-light-bg via-gray-50 to-crypto-light-surface'
+    }`}>
       {/* Header */}
       <div className="bg-gradient-to-r from-crypto-primary/10 via-crypto-accent/5 to-crypto-primary/10 border-b border-crypto-accent/20">
         <div className="max-w-7xl mx-auto px-6 py-6">
@@ -135,10 +150,14 @@ export default function SettingsPage({ user }: SettingsPageProps) {
                 <ArrowLeft className="w-5 h-5 text-gray-300" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                <h1 className={`text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent ${
+                  isDark ? 'from-white to-gray-300' : 'from-crypto-light-text to-crypto-light-text-secondary'
+                }`}>
                   Settings
                 </h1>
-                <p className="text-gray-400 text-sm mt-1">Customize your crypto experience</p>
+                <p className={`text-sm mt-1 ${
+                  isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'
+                }`}>Customize your crypto experience</p>
               </div>
             </div>
             <button
@@ -153,7 +172,7 @@ export default function SettingsPage({ user }: SettingsPageProps) {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              {isLoading ? 'Saving...' : saved ? 'Saved!' : 'Save All'}
+              {isLoading ? 'Saving...' : saved ? 'Saved! Reloading...' : 'Save & Apply'}
             </button>
           </div>
         </div>

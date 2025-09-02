@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CryptoRecommendation } from '../types/crypto'
 import CryptoChart from './CryptoChart'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface CryptoRecommendationsProps {
   recommendations: CryptoRecommendation[]
@@ -8,6 +9,7 @@ interface CryptoRecommendationsProps {
 }
 
 const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommendations, className = '' }) => {
+  const { isDark } = useTheme()
   const [expandedCrypto, setExpandedCrypto] = useState<string | null>(null)
   const [showChart, setShowChart] = useState<string | null>(null)
 
@@ -52,14 +54,14 @@ const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommend
   }
 
   return (
-    <div className={`bg-crypto-dark rounded-lg p-6 ${className}`}>
+    <div className={`rounded-lg p-6 ${isDark ? 'bg-crypto-dark' : 'bg-crypto-light-surface'} ${className}`}>
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold gradient-text mb-2">
               Top 5 Crypto Asset Recommendations
             </h2>
-            <p className="text-gray-400 text-sm">
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
               Based on performance analysis, technical indicators, and market trends
             </p>
           </div>
@@ -68,7 +70,7 @@ const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommend
 
       <div className="space-y-4">
         {recommendations.map((rec) => (
-          <div key={rec.crypto.symbol} className="bg-crypto-darker rounded-lg p-4 border border-gray-700">
+          <div key={rec.crypto.symbol} className={`rounded-lg p-4 border ${isDark ? 'bg-crypto-darker border-gray-700' : 'bg-gray-50 border-crypto-light-border'}`}>
             {/* Crypto Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
@@ -76,14 +78,14 @@ const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommend
                   {rec.crypto.symbol.charAt(0)}
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{rec.crypto.symbol}</h3>
-                  <p className="text-gray-400 text-sm">{rec.crypto.name}</p>
-                  <p className="text-gray-500 text-xs">Rank #{rec.crypto.cmc_rank}</p>
+                  <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>{rec.crypto.symbol}</h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>{rec.crypto.name}</p>
+                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-crypto-light-text-secondary'}`}>Rank #{rec.crypto.cmc_rank}</p>
                 </div>
               </div>
               
               <div className="text-right">
-                <p className="text-2xl font-bold text-white">{formatCurrency(rec.crypto.quote.USD.price)}</p>
+                <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>{formatCurrency(rec.crypto.quote.USD.price)}</p>
                 <p className={`text-sm ${rec.crypto.quote.USD.percent_change_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {formatPercentage(rec.crypto.quote.USD.percent_change_24h)}
                 </p>
@@ -92,32 +94,32 @@ const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommend
 
             {/* Recommendation Summary */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <div className="text-center p-3 bg-crypto-dark/50 rounded-lg">
+              <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-crypto-dark/50' : 'bg-white/80'}`}>
                 <div className={`text-2xl font-bold ${getRecommendationColor(rec.recommendation)}`}>
                   {rec.recommendation}
                 </div>
-                <div className="text-xs text-gray-400">Recommendation</div>
+                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>Recommendation</div>
               </div>
               
-              <div className="text-center p-3 bg-crypto-dark/50 rounded-lg">
+              <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-crypto-dark/50' : 'bg-white/80'}`}>
                 <div className={`text-2xl font-bold ${getScoreColor(rec.recommendation_score)}`}>
                   {rec.recommendation_score}
                 </div>
-                <div className="text-xs text-gray-400">Score</div>
+                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>Score</div>
               </div>
               
-              <div className="text-center p-3 bg-crypto-dark/50 rounded-lg">
+              <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-crypto-dark/50' : 'bg-white/80'}`}>
                 <div className={`text-2xl font-bold ${getTrendColor(rec.technical_analysis.trend)}`}>
                   {rec.technical_analysis.trend}
                 </div>
-                <div className="text-xs text-gray-400">Trend</div>
+                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>Trend</div>
               </div>
               
-              <div className="text-center p-3 bg-crypto-dark/50 rounded-lg">
+              <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-crypto-dark/50' : 'bg-white/80'}`}>
                 <div className="text-2xl font-bold text-crypto-primary">
                   {rec.forecast.confidence}%
                 </div>
-                <div className="text-xs text-gray-400">Confidence</div>
+                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>Confidence</div>
               </div>
             </div>
 
@@ -149,11 +151,11 @@ const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommend
             {expandedCrypto === rec.crypto.symbol && (
               <div className="mt-4 space-y-4">
                 {/* Reasoning */}
-                <div className="bg-crypto-dark/50 rounded-lg p-4">
-                  <h4 className="text-lg font-semibold text-white mb-3">Why {rec.crypto.symbol}?</h4>
+                <div className={`rounded-lg p-4 ${isDark ? 'bg-crypto-dark/50' : 'bg-white/80'}`}>
+                  <h4 className={`text-lg font-semibold mb-3 ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>Why {rec.crypto.symbol}?</h4>
                   <ul className="space-y-2">
                     {rec.reasoning.map((reason, index) => (
-                      <li key={index} className="flex items-start gap-2 text-gray-300">
+                      <li key={index} className={`flex items-start gap-2 ${isDark ? 'text-gray-300' : 'text-crypto-light-text-secondary'}`}>
                         <span className="text-crypto-primary mt-1">•</span>
                         {reason}
                       </li>
@@ -162,11 +164,11 @@ const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommend
                 </div>
 
                 {/* Risk Factors */}
-                <div className="bg-crypto-dark/50 rounded-lg p-4">
-                  <h4 className="text-lg font-semibold text-white mb-3">Risk Factors</h4>
+                <div className={`rounded-lg p-4 ${isDark ? 'bg-crypto-dark/50' : 'bg-white/80'}`}>
+                  <h4 className={`text-lg font-semibold mb-3 ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>Risk Factors</h4>
                   <ul className="space-y-2">
                     {rec.risk_factors.map((risk, index) => (
-                      <li key={index} className="flex items-start gap-2 text-gray-300">
+                      <li key={index} className={`flex items-start gap-2 ${isDark ? 'text-gray-300' : 'text-crypto-light-text-secondary'}`}>
                         <span className="text-red-400 mt-1">⚠</span>
                         {risk}
                       </li>
@@ -175,62 +177,62 @@ const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommend
                 </div>
 
                 {/* Technical Analysis */}
-                <div className="bg-crypto-dark/50 rounded-lg p-4">
-                  <h4 className="text-lg font-semibold text-white mb-3">Technical Analysis</h4>
+                <div className={`rounded-lg p-4 ${isDark ? 'bg-crypto-dark/50' : 'bg-white/80'}`}>
+                  <h4 className={`text-lg font-semibold mb-3 ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>Technical Analysis</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-crypto-primary">{rec.technical_analysis.rsi}</div>
-                      <div className="text-xs text-gray-400">RSI</div>
+                      <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>RSI</div>
                     </div>
                     <div className="text-center">
                       <div className={`text-2xl font-bold ${getTrendColor(rec.technical_analysis.trend)}`}>
                         {rec.technical_analysis.trend}
                       </div>
-                      <div className="text-xs text-gray-400">Trend</div>
+                      <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>Trend</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-crypto-accent">
                         {formatCurrency(rec.technical_analysis.support_level)}
                       </div>
-                      <div className="text-xs text-gray-400">Support</div>
+                      <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>Support</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-crypto-accent">
                         {formatCurrency(rec.technical_analysis.resistance_level)}
                       </div>
-                      <div className="text-xs text-gray-400">Resistance</div>
+                      <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>Resistance</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Forecast */}
-                <div className="bg-crypto-dark/50 rounded-lg p-4">
-                  <h4 className="text-lg font-semibold text-white mb-3">Price Forecast</h4>
+                <div className={`rounded-lg p-4 ${isDark ? 'bg-crypto-dark/50' : 'bg-white/80'}`}>
+                  <h4 className={`text-lg font-semibold mb-3 ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>Price Forecast</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="text-center p-3 bg-crypto-dark/30 rounded-lg">
-                      <div className="text-lg font-semibold text-gray-400">1 Week</div>
-                      <div className="text-2xl font-bold text-white">
+                    <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-crypto-dark/30' : 'bg-gray-100'}`}>
+                      <div className={`text-lg font-semibold ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>1 Week</div>
+                      <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>
                         {formatCurrency(rec.forecast.short_term)}
                       </div>
-                      <div className="text-sm text-gray-400">
+                      <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
                         {formatPercentage(((rec.forecast.short_term - rec.crypto.quote.USD.price) / rec.crypto.quote.USD.price) * 100)}
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-crypto-dark/30 rounded-lg">
-                      <div className="text-lg font-semibold text-gray-400">1 Month</div>
-                      <div className="text-2xl font-bold text-white">
+                    <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-crypto-dark/30' : 'bg-gray-100'}`}>
+                      <div className={`text-lg font-semibold ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>1 Month</div>
+                      <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>
                         {formatCurrency(rec.forecast.medium_term)}
                       </div>
-                      <div className="text-sm text-gray-400">
+                      <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
                         {formatPercentage(((rec.forecast.medium_term - rec.crypto.quote.USD.price) / rec.crypto.quote.USD.price) * 100)}
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-crypto-dark/30 rounded-lg">
-                      <div className="text-lg font-semibold text-gray-400">3 Months</div>
-                      <div className="text-2xl font-bold text-white">
+                    <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-crypto-dark/30' : 'bg-gray-100'}`}>
+                      <div className={`text-lg font-semibold ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>3 Months</div>
+                      <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>
                         {formatCurrency(rec.forecast.long_term)}
                       </div>
-                      <div className="text-sm text-gray-400">
+                      <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
                         {formatPercentage(((rec.forecast.long_term - rec.crypto.quote.USD.price) / rec.crypto.quote.USD.price) * 100)}
                       </div>
                     </div>
@@ -239,31 +241,31 @@ const CryptoRecommendations: React.FC<CryptoRecommendationsProps> = ({ recommend
 
                 {/* ML Model Insights */}
                 {rec.forecast.ml_prediction && (
-                  <div className="bg-crypto-dark/50 rounded-lg p-4">
-                    <h4 className="text-lg font-semibold text-white mb-3">AI Model Insights</h4>
+                  <div className={`rounded-lg p-4 ${isDark ? 'bg-crypto-dark/50' : 'bg-white/80'}`}>
+                    <h4 className={`text-lg font-semibold mb-3 ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>AI Model Insights</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <h5 className="text-sm font-medium text-gray-400 mb-2">Model Performance</h5>
+                        <h5 className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>Model Performance</h5>
                         <div className="space-y-2">
                           {Object.entries(rec.forecast.ml_prediction.model_scores).map(([model, score]) => (
                             <div key={model} className="flex items-center justify-between">
-                              <span className="text-sm text-gray-300 capitalize">{model}</span>
+                              <span className={`text-sm capitalize ${isDark ? 'text-gray-300' : 'text-crypto-light-text-secondary'}`}>{model}</span>
                               <span className={`text-sm font-medium ${getScoreColor(score)}`}>{score}%</span>
                             </div>
                           ))}
                         </div>
                       </div>
                       <div>
-                        <h5 className="text-sm font-medium text-gray-400 mb-2">Trend Analysis</h5>
+                        <h5 className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>Trend Analysis</h5>
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-300">Trend Strength</span>
+                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-crypto-light-text-secondary'}`}>Trend Strength</span>
                             <span className={`text-sm font-medium ${getScoreColor(rec.forecast.ml_prediction.trend_strength)}`}>
                               {rec.forecast.ml_prediction.trend_strength}%
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-300">Volatility Forecast</span>
+                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-crypto-light-text-secondary'}`}>Volatility Forecast</span>
                             <span className="text-sm font-medium text-crypto-accent">
                               {rec.forecast.ml_prediction.volatility_forecast}%
                             </span>

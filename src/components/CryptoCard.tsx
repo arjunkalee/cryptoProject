@@ -3,12 +3,14 @@ import { TrendingUp, TrendingDown, BarChart3, Coins, Globe } from 'lucide-react'
 import { CryptoData } from '../types/crypto'
 import ExpandedAssetView from './ExpandedAssetView'
 import CryptoChart from './CryptoChart'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface CryptoCardProps {
   crypto: CryptoData
 }
 
 const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
+  const { isDark } = useTheme()
   const [showExpanded, setShowExpanded] = useState(false)
   const [showChart, setShowChart] = useState(false)
   
@@ -46,7 +48,11 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
   return (
     <>
       <div 
-        className="glass-card p-6 hover-lift group cursor-pointer"
+        className={`p-6 hover-lift group cursor-pointer transition-all duration-300 ${
+          isDark 
+            ? 'glass-card' 
+            : 'bg-white/80 backdrop-blur-lg border border-crypto-light-border rounded-xl shadow-xl'
+        }`}
         onClick={() => setShowExpanded(true)}
       >
         {/* Header */}
@@ -56,10 +62,14 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
             {crypto.symbol.charAt(0)}
           </div>
           <div>
-            <h3 className="font-bold text-white group-hover:text-crypto-primary transition-colors">
+            <h3 className={`font-bold group-hover:text-crypto-primary transition-colors ${
+              isDark ? 'text-white' : 'text-crypto-light-text'
+            }`}>
               {crypto.name}
             </h3>
-            <p className="text-gray-400 text-sm">{crypto.symbol}</p>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
+              {crypto.symbol}
+            </p>
           </div>
         </div>
         <div className="text-right">
@@ -72,7 +82,7 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
 
         {/* Price and Change */}
         <div className="mb-4">
-        <div className="text-2xl font-bold text-white mb-2">
+        <div className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-crypto-light-text'}`}>
           {formatPrice(crypto.quote.USD.price)}
         </div>
         <div className="flex items-center justify-between">

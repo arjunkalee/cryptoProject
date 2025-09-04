@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { TrendingUp, TrendingDown, BarChart3, Coins, Globe } from 'lucide-react'
 import { CryptoData } from '../types/crypto'
 import ExpandedAssetView from './ExpandedAssetView'
-import CryptoChart from './CryptoChart'
+import ChartPopup from './ChartPopup'
 import { useTheme } from '../contexts/ThemeContext'
 
 interface CryptoCardProps {
@@ -12,7 +12,7 @@ interface CryptoCardProps {
 const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
   const { isDark } = useTheme()
   const [showExpanded, setShowExpanded] = useState(false)
-  const [showChart, setShowChart] = useState(false)
+  const [showChartPopup, setShowChartPopup] = useState(false)
   
   const formatCurrency = (value: number) => {
     if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`
@@ -140,11 +140,27 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
           </div>
         </div>
 
-        {/* Hover Effect Indicator */}
-        <div className="mt-4 pt-3 border-t border-crypto-accent/20 text-center">
-          <span className="text-xs text-crypto-accent group-hover:text-crypto-primary transition-colors">
-            Click to view details
-          </span>
+        {/* Action Buttons */}
+        <div className="mt-4 pt-3 border-t border-crypto-accent/20 flex gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowChartPopup(true)
+            }}
+            className="flex-1 px-3 py-2 bg-crypto-primary/20 hover:bg-crypto-primary/30 text-crypto-primary rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Chart
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowExpanded(true)
+            }}
+            className="flex-1 px-3 py-2 bg-crypto-accent/20 hover:bg-crypto-accent/30 text-crypto-accent rounded-lg transition-colors text-sm font-medium"
+          >
+            Details
+          </button>
         </div>
       </div>
 
@@ -171,11 +187,11 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      setShowChart(!showChart)
+                      setShowChartPopup(true)
                     }}
                     className="px-4 py-2 bg-crypto-accent/20 hover:bg-crypto-accent/30 text-crypto-accent rounded-lg transition-colors text-sm font-medium"
                   >
-                    {showChart ? 'Hide Chart' : 'Show Chart'}
+                    View Chart
                   </button>
                   <button
                     onClick={() => setShowExpanded(false)}
@@ -188,16 +204,7 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Chart Section */}
-              {showChart && (
-                <div className="bg-crypto-darker/50 rounded-xl p-6 border border-crypto-accent/20">
-                  <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                    <BarChart3 className="w-6 h-6 text-crypto-primary" />
-                    Price Chart & Forecast
-                  </h3>
-                  <CryptoChart crypto={crypto} />
-                </div>
-              )}
+
 
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -293,6 +300,13 @@ const CryptoCard: React.FC<CryptoCardProps> = ({ crypto }) => {
           </div>
         </div>
       )}
+
+      {/* Chart Popup */}
+      <ChartPopup 
+        crypto={crypto} 
+        isOpen={showChartPopup} 
+        onClose={() => setShowChartPopup(false)} 
+      />
     </>
   )
 }

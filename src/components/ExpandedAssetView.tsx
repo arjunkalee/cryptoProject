@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { X, TrendingUp, TrendingDown, BarChart3, Coins, Globe, Calendar, Target, Activity, Shield, Info } from 'lucide-react'
 import { CryptoData } from '../types/crypto'
-import CryptoChart from './CryptoChart'
+import CryptoAssetChart from './CryptoAssetChart'
+import SimpleChart from './SimpleChart'
+import TestChart from './TestChart'
 
 interface ExpandedAssetViewProps {
   crypto: CryptoData
@@ -9,6 +11,8 @@ interface ExpandedAssetViewProps {
 }
 
 const ExpandedAssetView: React.FC<ExpandedAssetViewProps> = ({ crypto, onClose }) => {
+  const [useSimpleChart, setUseSimpleChart] = useState(false)
+  const [useTestChart, setUseTestChart] = useState(true) // Start with test chart
   const formatCurrency = (value: number) => {
     if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`
     if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`
@@ -154,11 +158,40 @@ const ExpandedAssetView: React.FC<ExpandedAssetViewProps> = ({ crypto, onClose }
 
           {/* Chart */}
           <div className="bg-crypto-darker/50 rounded-xl p-6 border border-crypto-accent/20">
-            <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-              <BarChart3 className="w-6 h-6 text-crypto-primary" />
-              Price Chart & Forecast
-            </h3>
-            <CryptoChart crypto={crypto} />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+                <BarChart3 className="w-6 h-6 text-crypto-primary" />
+                Price Chart & Forecast
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setUseTestChart(!useTestChart)
+                    if (useTestChart) {
+                      setUseSimpleChart(false)
+                    }
+                  }}
+                  className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors text-sm"
+                >
+                  {useTestChart ? 'Use Real Charts' : 'Test Mode'}
+                </button>
+                {!useTestChart && (
+                  <button
+                    onClick={() => setUseSimpleChart(!useSimpleChart)}
+                    className="px-3 py-1 bg-crypto-accent/20 hover:bg-crypto-accent/30 text-crypto-accent rounded-lg transition-colors text-sm"
+                  >
+                    {useSimpleChart ? 'Use Recharts' : 'Use Simple Chart'}
+                  </button>
+                )}
+              </div>
+            </div>
+            {useTestChart ? (
+              <TestChart crypto={crypto} />
+            ) : useSimpleChart ? (
+              <SimpleChart crypto={crypto} />
+            ) : (
+              <CryptoAssetChart crypto={crypto} />
+            )}
           </div>
 
           {/* Supply Information */}

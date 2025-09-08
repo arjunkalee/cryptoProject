@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, RefreshCw, TrendingUp, DollarSign, BarChart3, Settings } from 'lucide-react'
+import { Search, RefreshCw, TrendingUp, DollarSign, BarChart3, Settings, Wallet } from 'lucide-react'
 import UserProfile from './UserProfile'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -16,6 +16,8 @@ interface HeaderProps {
   user?: { id: string; email: string; username: string; createdAt: Date; lastLoginAt: Date } | null
   onLogout?: () => void
   onSettingsToggle?: () => void
+  activeTab?: 'market' | 'portfolio'
+  onTabChange?: (tab: 'market' | 'portfolio') => void
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -29,7 +31,9 @@ const Header: React.FC<HeaderProps> = ({
   totalResultsCount,
   user,
   onLogout,
-  onSettingsToggle
+  onSettingsToggle,
+  activeTab = 'market',
+  onTabChange
 }) => {
   const { isDark } = useTheme()
   
@@ -54,80 +58,119 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search cryptocurrencies..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-crypto-primary focus:border-transparent transition-all ${
-                isDark 
-                  ? 'bg-white/10 border border-white/20 text-white placeholder-gray-400' 
-                  : 'bg-white/80 border border-crypto-light-border text-crypto-light-text placeholder-crypto-light-text-secondary'
-              }`}
-            />
-            {searchTerm && (
-              <>
-                <button
-                  onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-white transition-colors"
-                  title="Clear search"
-                >
-                  ✕
-                </button>
-                <div className={`absolute -bottom-8 left-0 text-sm ${
-                  isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'
-                }`}>
-                  {searchResultsCount !== undefined && totalResultsCount !== undefined ? (
-                    <span>
-                      {searchResultsCount} of {totalResultsCount} results
-                    </span>
-                  ) : (
-                    <span>Searching...</span>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Sort and Refresh Controls */}
-          <div className="flex items-center gap-4">
-            {/* Sort Dropdown */}
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={(e) => onSortChange(e.target.value as 'market_cap' | 'price' | 'change_24h')}
-                className={`appearance-none rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-crypto-primary focus:border-transparent transition-all cursor-pointer ${
-                  isDark 
-                    ? 'bg-white/10 border border-white/20 text-white' 
-                    : 'bg-white/80 border border-crypto-light-border text-crypto-light-text'
+          {/* Navigation Tabs */}
+          {user && onTabChange && (
+            <div className="flex space-x-1">
+              <button
+                onClick={() => onTabChange('market')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  activeTab === 'market'
+                    ? 'bg-crypto-primary text-white'
+                    : isDark
+                    ? 'text-gray-400 hover:text-white hover:bg-white/10'
+                    : 'text-crypto-light-text-secondary hover:text-crypto-light-text hover:bg-gray-100'
                 }`}
               >
-                <option value="market_cap" className={isDark ? 'bg-crypto-dark text-white' : 'bg-white text-crypto-light-text'}>
-                  Market Cap
-                </option>
-                <option value="price" className={isDark ? 'bg-crypto-dark text-white' : 'bg-white text-crypto-light-text'}>
-                  Price
-                </option>
-                <option value="change_24h" className={isDark ? 'bg-crypto-dark text-white' : 'bg-white text-crypto-light-text'}>
-                  24h Change
-                </option>
-              </select>
-              <BarChart3 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <BarChart3 className="w-4 h-4" />
+                Market
+              </button>
+              <button
+                onClick={() => onTabChange('portfolio')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  activeTab === 'portfolio'
+                    ? 'bg-crypto-primary text-white'
+                    : isDark
+                    ? 'text-gray-400 hover:text-white hover:bg-white/10'
+                    : 'text-crypto-light-text-secondary hover:text-crypto-light-text hover:bg-gray-100'
+                }`}
+              >
+                <Wallet className="w-4 h-4" />
+                Portfolio
+              </button>
             </div>
+          )}
 
-            {/* Refresh Button */}
-            <button
-              onClick={onRefresh}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-crypto-primary to-crypto-secondary hover:from-crypto-secondary hover:to-crypto-accent text-white rounded-lg font-medium transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? 'Loading...' : 'Refresh'}
-            </button>
+          {/* Search Bar - Only show on market tab */}
+          {activeTab === 'market' && (
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search cryptocurrencies..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className={`w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-crypto-primary focus:border-transparent transition-all ${
+                  isDark 
+                    ? 'bg-white/10 border border-white/20 text-white placeholder-gray-400' 
+                    : 'bg-white/80 border border-crypto-light-border text-crypto-light-text placeholder-crypto-light-text-secondary'
+                }`}
+              />
+              {searchTerm && (
+                <>
+                  <button
+                    onClick={() => onSearchChange('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-white transition-colors"
+                    title="Clear search"
+                  >
+                    ✕
+                  </button>
+                  <div className={`absolute -bottom-8 left-0 text-sm ${
+                    isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'
+                  }`}>
+                    {searchResultsCount !== undefined && totalResultsCount !== undefined ? (
+                      <span>
+                        {searchResultsCount} of {totalResultsCount} results
+                      </span>
+                    ) : (
+                      <span>Searching...</span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
+          {/* Sort and Refresh Controls - Only show on market tab */}
+          {activeTab === 'market' && (
+            <div className="flex items-center gap-4">
+              {/* Sort Dropdown */}
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => onSortChange(e.target.value as 'market_cap' | 'price' | 'change_24h')}
+                  className={`appearance-none rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-crypto-primary focus:border-transparent transition-all cursor-pointer ${
+                    isDark 
+                      ? 'bg-white/10 border border-white/20 text-white' 
+                      : 'bg-white/80 border border-crypto-light-border text-crypto-light-text'
+                  }`}
+                >
+                  <option value="market_cap" className={isDark ? 'bg-crypto-dark text-white' : 'bg-white text-crypto-light-text'}>
+                    Market Cap
+                  </option>
+                  <option value="price" className={isDark ? 'bg-crypto-dark text-white' : 'bg-white text-crypto-light-text'}>
+                    Price
+                  </option>
+                  <option value="change_24h" className={isDark ? 'bg-crypto-dark text-white' : 'bg-white text-crypto-light-text'}>
+                    24h Change
+                  </option>
+                </select>
+                <BarChart3 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Refresh Button */}
+              <button
+                onClick={onRefresh}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-crypto-primary to-crypto-secondary hover:from-crypto-secondary hover:to-crypto-accent text-white rounded-lg font-medium transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                {loading ? 'Loading...' : 'Refresh'}
+              </button>
+            </div>
+          )}
+
+          {/* Settings and User Profile - Always show when user is logged in */}
+          <div className="flex items-center gap-4">
             {/* Settings Button */}
             {user && onSettingsToggle && (
               <button

@@ -8,6 +8,7 @@ import AuthModal from './components/AuthModal'
 import AssetFilters from './components/AssetFilters'
 import FilterSummary from './components/FilterSummary'
 import SettingsSidebar from './components/SettingsSidebar'
+import PortfolioPage from './pages/PortfolioPage'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
 import { fetchCryptoData } from './services/cryptoApi'
 import { getTopCryptoRecommendations } from './services/cryptoRecommendations'
@@ -46,6 +47,9 @@ function AppContent() {
 
   // Settings sidebar state
   const [showSettings, setShowSettings] = useState(false)
+  
+  // Navigation state
+  const [activeTab, setActiveTab] = useState<'market' | 'portfolio'>('market')
 
   const defaultFilters = {
     marketCapRange: [0, 1000000000000] as [number, number],
@@ -276,49 +280,57 @@ function AppContent() {
         user={user}
         onLogout={handleLogout}
         onSettingsToggle={() => setShowSettings(true)}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
       
       <main className="container mx-auto px-4 py-8">
-        {error && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
-            <p className="text-center">{error}</p>
-            <button 
-              onClick={loadCryptoData}
-              className="mt-2 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
-            >
-              Retry
-            </button>
-          </div>
+        {activeTab === 'market' ? (
+          <>
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
+                <p className="text-center">{error}</p>
+                <button 
+                  onClick={loadCryptoData}
+                  className="mt-2 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            
+            {/* Top 5 Crypto Recommendations - Now at the top */}
+            <div className="mb-8">
+              <CryptoRecommendations recommendations={filteredRecommendations} />
+            </div>
+            
+            <CryptoStats cryptoData={cryptoData} />
+            
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold gradient-text">
+                  Cryptocurrency Market
+                </h2>
+                <AssetFilters
+                  filters={assetFilters}
+                  onFiltersChange={setAssetFilters}
+                  onReset={resetFilters}
+                  isOpen={filtersOpen}
+                  onToggle={() => setFiltersOpen(!filtersOpen)}
+                />
+              </div>
+              
+              <FilterSummary 
+                filters={assetFilters}
+                onReset={resetFilters}
+              />
+              
+              <CryptoGrid cryptoData={sortedCryptoData} />
+            </div>
+          </>
+        ) : (
+          <PortfolioPage user={user} />
         )}
-        
-        {/* Top 5 Crypto Recommendations - Now at the top */}
-        <div className="mb-8">
-          <CryptoRecommendations recommendations={filteredRecommendations} />
-        </div>
-        
-        <CryptoStats cryptoData={cryptoData} />
-        
-        <div className="mt-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold gradient-text">
-              Cryptocurrency Market
-            </h2>
-            <AssetFilters
-              filters={assetFilters}
-              onFiltersChange={setAssetFilters}
-              onReset={resetFilters}
-              isOpen={filtersOpen}
-              onToggle={() => setFiltersOpen(!filtersOpen)}
-            />
-          </div>
-          
-          <FilterSummary 
-            filters={assetFilters}
-            onReset={resetFilters}
-          />
-          
-          <CryptoGrid cryptoData={sortedCryptoData} />
-        </div>
       </main>
 
       {/* Settings Sidebar */}

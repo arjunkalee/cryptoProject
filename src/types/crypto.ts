@@ -89,3 +89,54 @@ export interface CryptoRecommendation {
     }
   }
 }
+
+export interface PortfolioAsset {
+  id: string
+  cryptoId: number
+  symbol: string
+  name: string
+  amount: number
+  averagePrice: number
+  currentPrice: number
+  totalValue: number
+  totalCost: number
+  profitLoss: number
+  profitLossPercentage: number
+  dateAdded: string
+  lastUpdated: string
+}
+
+export interface PortfolioTransaction {
+  id: string
+  assetId: string
+  type: 'buy' | 'sell'
+  amount: number
+  price: number
+  totalValue: number
+  fees?: number
+  date: string
+  notes?: string
+}
+
+export interface PortfolioSummary {
+  totalValue: number
+  totalCost: number
+  totalProfitLoss: number
+  totalProfitLossPercentage: number
+  dayChange: number
+  dayChangePercentage: number
+  assetCount: number
+  topPerformers: PortfolioAsset[]
+  worstPerformers: PortfolioAsset[]
+}
+
+export interface Portfolio {
+  id: string
+  userId: string
+  name: string
+  assets: PortfolioAsset[]
+  transactions: PortfolioTransaction[]
+  summary: PortfolioSummary
+  createdAt: string
+  updatedAt: string
+}

@@ -4,6 +4,10 @@ import { useTheme } from '../contexts/ThemeContext'
 import { Portfolio, PortfolioAsset, PortfolioTransaction, PortfolioSummary, CryptoData } from '../types/crypto'
 import { User } from '../types/auth'
 import AddAssetModal from '../components/AddAssetModal'
+import SellAssetModal from '../components/SellAssetModal'
+import PerformanceChart from '../components/PerformanceChart'
+import AssetAllocationChart from '../components/AssetAllocationChart'
+import PriceAlerts from '../components/PriceAlerts'
 import { fetchCryptoData } from '../services/cryptoApi'
 import { portfolioService } from '../services/portfolioService'
 
@@ -15,8 +19,10 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
   const { isDark } = useTheme()
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'assets' | 'transactions'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'assets' | 'transactions' | 'analytics' | 'alerts'>('overview')
   const [showAddAsset, setShowAddAsset] = useState(false)
+  const [showSellAsset, setShowSellAsset] = useState(false)
+  const [selectedAsset, setSelectedAsset] = useState<PortfolioAsset | null>(null)
   const [availableCryptos, setAvailableCryptos] = useState<CryptoData[]>([])
   const [cryptoLoading, setCryptoLoading] = useState(false)
 
@@ -66,6 +72,22 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
       // Reload portfolio to get updated data
       loadPortfolio()
     }
+  }
+
+  // Handle selling an asset
+  const handleSellAsset = (assetId: string, amount: number, price: number, notes?: string) => {
+    const success = portfolioService.sellAsset(user.id, assetId, amount, price, notes)
+    
+    if (success) {
+      // Reload portfolio to get updated data
+      loadPortfolio()
+    }
+  }
+
+  // Handle opening sell modal
+  const handleOpenSellModal = (asset: PortfolioAsset) => {
+    setSelectedAsset(asset)
+    setShowSellAsset(true)
   }
 
   // Load crypto data and portfolio when component mounts
@@ -217,11 +239,13 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 mb-8">
+        <div className="flex space-x-1 mb-8 overflow-x-auto">
           {[
             { id: 'overview', label: 'Overview', icon: BarChart3 },
             { id: 'assets', label: 'Assets', icon: Wallet },
-            { id: 'transactions', label: 'Transactions', icon: History }
+            { id: 'transactions', label: 'Transactions', icon: History },
+            { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+            { id: 'alerts', label: 'Alerts', icon: DollarSign }
           ].map((tab) => {
             const Icon = tab.icon
             return (
@@ -313,6 +337,7 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
                     <th className="text-right py-3 px-4">Current Price</th>
                     <th className="text-right py-3 px-4">Total Value</th>
                     <th className="text-right py-3 px-4">P&L</th>
+                    <th className="text-center py-3 px-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -335,6 +360,14 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
                         <div className={`text-sm ${asset.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                           {formatPercentage(asset.profitLossPercentage)}
                         </div>
+                      </td>
+                      <td className="text-center py-4 px-4">
+                        <button
+                          onClick={() => handleOpenSellModal(asset)}
+                          className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors"
+                        >
+                          Sell
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -385,6 +418,26 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
             </div>
           </div>
         )}
+
+        {activeTab === 'analytics' && (
+          <div className="space-y-8">
+            {/* Performance Chart */}
+            <PerformanceChart 
+              data={[]} // Mock data - in real app, you'd generate this from portfolio history
+            />
+            
+            {/* Asset Allocation Chart */}
+            <AssetAllocationChart 
+              assets={portfolio.assets}
+            />
+          </div>
+        )}
+
+        {activeTab === 'alerts' && (
+          <PriceAlerts 
+            availableCryptos={availableCryptos}
+          />
+        )}
       </div>
 
       {/* Add Asset Modal */}
@@ -393,6 +446,15 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
         onClose={() => setShowAddAsset(false)}
         onAddAsset={handleAddAsset}
         availableCryptos={availableCryptos}
+        loading={cryptoLoading}
+      />
+
+      {/* Sell Asset Modal */}
+      <SellAssetModal
+        isOpen={showSellAsset}
+        onClose={() => setShowSellAsset(false)}
+        onSellAsset={handleSellAsset}
+        asset={selectedAsset}
         loading={cryptoLoading}
       />
     </div>

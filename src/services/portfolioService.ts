@@ -73,6 +73,65 @@ export class PortfolioService {
     return portfolio
   }
 
+  public sellAsset(
+    userId: string,
+    assetId: string,
+    amount: number,
+    price: number,
+    notes?: string
+  ): boolean {
+    if (!this.portfolio || this.portfolio.userId !== userId) {
+      return false
+    }
+
+    const assetIndex = this.portfolio.assets.findIndex(a => a.id === assetId)
+    if (assetIndex === -1) {
+      return false
+    }
+
+    const asset = this.portfolio.assets[assetIndex]
+    
+    // Check if we have enough to sell
+    if (amount > asset.amount) {
+      return false
+    }
+
+    // Create sell transaction
+    const transaction: PortfolioTransaction = {
+      id: Date.now().toString(),
+      assetId: asset.id,
+      type: 'sell',
+      amount,
+      price,
+      totalValue: amount * price,
+      fees: 0,
+      date: new Date().toISOString(),
+      notes
+    }
+
+    // Update asset
+    if (amount === asset.amount) {
+      // Selling entire position
+      this.portfolio.assets.splice(assetIndex, 1)
+    } else {
+      // Partial sell
+      asset.amount -= amount
+      asset.totalValue = asset.amount * asset.currentPrice
+      asset.totalCost = asset.amount * asset.averagePrice
+      asset.profitLoss = asset.totalValue - asset.totalCost
+      asset.profitLossPercentage = asset.totalCost > 0 ? (asset.profitLoss / asset.totalCost) * 100 : 0
+      asset.lastUpdated = new Date().toISOString()
+    }
+
+    // Add transaction
+    this.portfolio.transactions.push(transaction)
+
+    // Update summary
+    this.updateSummary()
+    this.saveToStorage()
+    return true
+  }
+
   public addAsset(
     userId: string,
     cryptoId: number,

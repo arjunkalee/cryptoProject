@@ -9,6 +9,7 @@ import AssetFilters from './components/AssetFilters'
 import FilterSummary from './components/FilterSummary'
 import SettingsSidebar from './components/SettingsSidebar'
 import PortfolioPage from './pages/PortfolioPage'
+import TransferPage from './pages/TransferPage'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
 import { fetchCryptoData } from './services/cryptoApi'
 import { getTopCryptoRecommendations } from './services/cryptoRecommendations'
@@ -49,7 +50,7 @@ function AppContent() {
   const [showSettings, setShowSettings] = useState(false)
   
   // Navigation state
-  const [activeTab, setActiveTab] = useState<'market' | 'portfolio'>('market')
+  const [activeTab, setActiveTab] = useState<'market' | 'portfolio' | 'transfer'>('market')
 
   const defaultFilters = {
     marketCapRange: [0, 1000000000000] as [number, number],
@@ -328,8 +329,10 @@ function AppContent() {
               <CryptoGrid cryptoData={sortedCryptoData} />
             </div>
           </>
-        ) : (
+        ) : activeTab === 'portfolio' ? (
           <PortfolioPage user={user} />
+        ) : (
+          <TransferPage user={user} />
         )}
       </main>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Plus, TrendingUp, TrendingDown, DollarSign, BarChart3, Wallet, History } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { Portfolio, PortfolioAsset, PortfolioTransaction, PortfolioSummary, CryptoData } from '../types/crypto'
@@ -8,8 +8,12 @@ import SellAssetModal from '../components/SellAssetModal'
 import PerformanceChart from '../components/PerformanceChart'
 import AssetAllocationChart from '../components/AssetAllocationChart'
 import PriceAlerts from '../components/PriceAlerts'
+import PortfolioSortControls, { SortConfig } from '../components/PortfolioSortControls'
+import PortfolioSummaryCards from '../components/PortfolioSummaryCards'
+import PortfolioOverview from '../components/PortfolioOverview'
 import { fetchCryptoData } from '../services/cryptoApi'
 import { portfolioService } from '../services/portfolioService'
+import { sortPortfolioAssets, PRESET_SORTS } from '../utils/portfolioSorting'
 
 interface PortfolioPageProps {
   user: User
@@ -25,6 +29,9 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
   const [selectedAsset, setSelectedAsset] = useState<PortfolioAsset | null>(null)
   const [availableCryptos, setAvailableCryptos] = useState<CryptoData[]>([])
   const [cryptoLoading, setCryptoLoading] = useState(false)
+  
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<SortConfig>(PRESET_SORTS.HIGHEST_VALUE)
 
   // Load available cryptocurrencies for the add asset modal
   const loadCryptoData = async () => {
@@ -109,6 +116,12 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
     }
   }, [availableCryptos, user.id])
 
+  // Sort portfolio assets based on current sort configuration
+  const sortedAssets = useMemo(() => {
+    if (!portfolio) return []
+    return sortPortfolioAssets(portfolio.assets, sortConfig.field, sortConfig.direction)
+  }, [portfolio, sortConfig])
+
 
   if (loading) {
     return (
@@ -162,81 +175,7 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className={`p-6 rounded-xl ${isDark ? 'glass-card' : 'bg-white shadow-lg border border-crypto-light-border'}`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-crypto-primary/20' : 'bg-crypto-primary/10'}`}>
-                <DollarSign className="w-6 h-6 text-crypto-primary" />
-              </div>
-              <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
-                Total Value
-              </span>
-            </div>
-            <div className="text-2xl font-bold mb-1">{formatCurrency(portfolio.summary.totalValue)}</div>
-            <div className={`text-sm flex items-center gap-1 ${
-              portfolio.summary.dayChange >= 0 ? 'text-green-500' : 'text-red-500'
-            }`}>
-              {portfolio.summary.dayChange >= 0 ? (
-                <TrendingUp className="w-4 h-4" />
-              ) : (
-                <TrendingDown className="w-4 h-4" />
-              )}
-              {formatCurrency(portfolio.summary.dayChange)} ({formatPercentage(portfolio.summary.dayChangePercentage)})
-            </div>
-          </div>
-
-          <div className={`p-6 rounded-xl ${isDark ? 'glass-card' : 'bg-white shadow-lg border border-crypto-light-border'}`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-crypto-accent/20' : 'bg-crypto-accent/10'}`}>
-                <BarChart3 className="w-6 h-6 text-crypto-accent" />
-              </div>
-              <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
-                Total P&L
-              </span>
-            </div>
-            <div className="text-2xl font-bold mb-1">{formatCurrency(portfolio.summary.totalProfitLoss)}</div>
-            <div className={`text-sm flex items-center gap-1 ${
-              portfolio.summary.totalProfitLoss >= 0 ? 'text-green-500' : 'text-red-500'
-            }`}>
-              {portfolio.summary.totalProfitLoss >= 0 ? (
-                <TrendingUp className="w-4 h-4" />
-              ) : (
-                <TrendingDown className="w-4 h-4" />
-              )}
-              {formatPercentage(portfolio.summary.totalProfitLossPercentage)}
-            </div>
-          </div>
-
-          <div className={`p-6 rounded-xl ${isDark ? 'glass-card' : 'bg-white shadow-lg border border-crypto-light-border'}`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-crypto-secondary/20' : 'bg-crypto-secondary/10'}`}>
-                <Wallet className="w-6 h-6 text-crypto-secondary" />
-              </div>
-              <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
-                Total Cost
-              </span>
-            </div>
-            <div className="text-2xl font-bold mb-1">{formatCurrency(portfolio.summary.totalCost)}</div>
-            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
-              Invested amount
-            </div>
-          </div>
-
-          <div className={`p-6 rounded-xl ${isDark ? 'glass-card' : 'bg-white shadow-lg border border-crypto-light-border'}`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-lg ${isDark ? 'bg-crypto-primary/20' : 'bg-crypto-primary/10'}`}>
-                <BarChart3 className="w-6 h-6 text-crypto-primary" />
-              </div>
-              <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
-                Assets
-              </span>
-            </div>
-            <div className="text-2xl font-bold mb-1">{portfolio.summary.assetCount}</div>
-            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-crypto-light-text-secondary'}`}>
-              Holdings
-            </div>
-          </div>
-        </div>
+        <PortfolioSummaryCards portfolio={portfolio} />
 
         {/* Tabs */}
         <div className="flex space-x-1 mb-8 overflow-x-auto">
@@ -269,64 +208,18 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
 
         {/* Tab Content */}
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Top Performers */}
-            <div className={`p-6 rounded-xl ${isDark ? 'glass-card' : 'bg-white shadow-lg border border-crypto-light-border'}`}>
-              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-500" />
-                Top Performers
-              </h3>
-              <div className="space-y-4">
-                {portfolio.summary.topPerformers.map((asset) => (
-                  <div key={asset.id} className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{asset.name}</div>
-                      <div className="text-sm text-gray-500">{asset.symbol}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{formatCurrency(asset.totalValue)}</div>
-                      <div className={`text-sm ${asset.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {formatPercentage(asset.profitLossPercentage)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Transactions */}
-            <div className={`p-6 rounded-xl ${isDark ? 'glass-card' : 'bg-white shadow-lg border border-crypto-light-border'}`}>
-              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <History className="w-5 h-5 text-crypto-primary" />
-                Recent Transactions
-              </h3>
-              <div className="space-y-4">
-                {portfolio.transactions.slice(0, 5).map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">
-                        {transaction.type === 'buy' ? 'Bought' : 'Sold'} {transaction.amount} {transaction.assetId}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {new Date(transaction.date).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{formatCurrency(transaction.totalValue)}</div>
-                      <div className={`text-sm ${transaction.type === 'buy' ? 'text-red-500' : 'text-green-500'}`}>
-                        {transaction.type === 'buy' ? '-' : '+'}{formatCurrency(transaction.totalValue)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <PortfolioOverview portfolio={portfolio} />
         )}
 
         {activeTab === 'assets' && (
           <div className={`p-6 rounded-xl ${isDark ? 'glass-card' : 'bg-white shadow-lg border border-crypto-light-border'}`}>
-            <h3 className="text-xl font-semibold mb-6">Your Assets</h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <h3 className="text-xl font-semibold">Your Assets</h3>
+              <PortfolioSortControls 
+                sortConfig={sortConfig}
+                onSortChange={setSortConfig}
+              />
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -341,7 +234,7 @@ const PortfolioPage: React.FC<PortfolioPageProps> = ({ user }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {portfolio.assets.map((asset) => (
+                  {sortedAssets.map((asset) => (
                     <tr key={asset.id} className={`border-b ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
                       <td className="py-4 px-4">
                         <div>

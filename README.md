@@ -12,6 +12,11 @@ A beautiful, modern cryptocurrency tracking application built with React, TypeSc
 - **Market Overview**: Total market cap, volume, and top gainers/losers
 - **Performance Metrics**: 1h, 24h, and 7-day price changes
 - **Auto-refresh**: Data updates every 5 minutes automatically
+- **Portfolio Management**: Track your cryptocurrency investments with detailed analytics
+- **News & Insights**: Stay updated with the latest crypto news, market analysis, and insights
+- **Price Alerts**: Set up notifications for price movements
+- **User Authentication**: Secure login and registration system
+- **Theme Customization**: Light and dark mode with customizable accent colors
 
 ## 🚀 Getting Started
 
@@ -97,6 +102,16 @@ Each cryptocurrency card shows:
 - Circulating and total supply
 - 1-hour and 7-day price changes
 - Market rank
+
+## 📰 News & Insights
+
+The news feature provides:
+- **Real-time News**: Latest cryptocurrency news from multiple sources
+- **Smart Filtering**: Filter by category, source, sentiment, and time range
+- **Search Functionality**: Find specific news articles
+- **Sentiment Analysis**: Positive, negative, or neutral sentiment indicators
+- **Relevance Scoring**: Articles ranked by relevance to crypto markets
+- **Multiple Categories**: Bitcoin, Ethereum, DeFi, NFT, Regulation, Technology, and more
 
 ## 🔧 Customization
 

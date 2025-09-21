@@ -8,6 +8,7 @@ import AuthModal from './components/AuthModal'
 import AssetFilters from './components/AssetFilters'
 import FilterSummary from './components/FilterSummary'
 import SettingsSidebar from './components/SettingsSidebar'
+import CryptoNews from './components/CryptoNews'
 import PortfolioPage from './pages/PortfolioPage'
 import TransferPage from './pages/TransferPage'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
@@ -50,7 +51,7 @@ function AppContent() {
   const [showSettings, setShowSettings] = useState(false)
   
   // Navigation state
-  const [activeTab, setActiveTab] = useState<'market' | 'portfolio' | 'transfer'>('market')
+  const [activeTab, setActiveTab] = useState<'market' | 'portfolio' | 'transfer' | 'news'>('market')
 
   const defaultFilters = {
     marketCapRange: [0, 1000000000000] as [number, number],
@@ -331,6 +332,10 @@ function AppContent() {
           </>
         ) : activeTab === 'portfolio' ? (
           <PortfolioPage user={user} />
+        ) : activeTab === 'news' ? (
+          <div className="container mx-auto px-4 py-8">
+            <CryptoNews />
+          </div>
         ) : (
           <TransferPage user={user} />
         )}

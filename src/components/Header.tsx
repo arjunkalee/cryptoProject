@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, RefreshCw, TrendingUp, DollarSign, BarChart3, Settings, Wallet, ArrowLeftRight } from 'lucide-react'
+import { Search, RefreshCw, TrendingUp, DollarSign, BarChart3, Settings, Wallet, ArrowLeftRight, Newspaper } from 'lucide-react'
 import UserProfile from './UserProfile'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -16,8 +16,8 @@ interface HeaderProps {
   user?: { id: string; email: string; username: string; createdAt: Date; lastLoginAt: Date } | null
   onLogout?: () => void
   onSettingsToggle?: () => void
-  activeTab?: 'market' | 'portfolio' | 'transfer'
-  onTabChange?: (tab: 'market' | 'portfolio' | 'transfer') => void
+  activeTab?: 'market' | 'portfolio' | 'transfer' | 'news'
+  onTabChange?: (tab: 'market' | 'portfolio' | 'transfer' | 'news') => void
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -99,6 +99,19 @@ const Header: React.FC<HeaderProps> = ({
               >
                 <ArrowLeftRight className="w-4 h-4" />
                 Transfer
+              </button>
+              <button
+                onClick={() => onTabChange('news')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  activeTab === 'news'
+                    ? 'bg-crypto-primary text-white'
+                    : isDark
+                    ? 'text-gray-400 hover:text-white hover:bg-white/10'
+                    : 'text-crypto-light-text-secondary hover:text-crypto-light-text hover:bg-gray-100'
+                }`}
+              >
+                <Newspaper className="w-4 h-4" />
+                News
               </button>
             </div>
           )}
